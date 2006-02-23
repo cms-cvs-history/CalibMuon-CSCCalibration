@@ -17,6 +17,13 @@ Usage of programs listed here:
 
 0.2 Build all packages by executing "scramv1 b" in directories where a BuildFile is present or at the very top ( in src).
 
+0.3 Copy .so files for ORACLE database transfer from:
+      
+       http://cmsdoc.cern.ch/cms/CSC/CERN/dbc_library/   (copy: libcondbc.so)
+       http://cmsdoc.cern.ch/CSC/CERN/cscmap_library/    (copy: libcscmap.so)
+
+    to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area.
+
 1.  Execute "scramv1 b" to create executables for all files in working directory. Uncomment each <bin file...> one at a time
     from BuildFile and compile (might work with all at once...) .
 
