@@ -1,0 +1,25 @@
+<bin file=afeb.cpp>
+#<bin file=gains_rms.cpp>
+#<bin file=cross_talk.cpp>
+#<bin file=ped_rms.cpp>
+#<bin file=cfeb_con.cpp>
+#<bin file=calib1.cpp>
+#<bin file=orig.cpp>
+#<bin file=digiAnal.cpp>
+<use name=EventFilter/CSCRawToDigi>
+<use name=DataFormats/CSCDigi>
+<use name=IORawData/CSCCommissioning>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
+<use name=rootcore>
+<use name=root>
+#</bin> 
+</bin>
+#</bin>
+#</bin>
+
+
+
+
