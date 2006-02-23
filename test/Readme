@@ -1,0 +1,38 @@
+
+OBS!!!  This is not yet according to CMSSW rules, but need to keep a copy for myyself or whomever wants to look at this code !!!!
+
+Usage of programs listed here:
+
+0.1 Create your project area CMSSW_x_x_x and check out the following packages:
+      
+      CondFormats/CSCObjects
+      DataFormats/CSCDigi
+      Geometry/CSCSimAlgo
+      IORawData/CSCCommissioning
+	
+0.1 execute !ev ( which means setenv `scramv1 runtime -csh`  )
+
+0.2 Build all of them by executing scramv1 b in directories where a BuildFile is present or at the top
+
+1.  Copy the *.cpp files to EventFilter/CSCRawToDigi/test
+
+2.  Execute  scramv1 b to create executables for all of them 
+
+3.  Make soft links to all of the executables so you can run from test, alternatively run them from 
+    CMSSW_x_x_x/CMSSW_x_x_x/test/slc3_ia32_gcc323/  where they will be created
+
+4.  Execution:
+        
+	    ./executable_name data_file.bin
+
+5.  Calibration data files are usually in emuslice02:/data/test_results/ 
+    OR CASTOR. To get them from CASTOR (usually works from an lxplus account) : 
+       
+	     rfcp /castor/cern.ch/cms/emuslice/2005/filename .  
+
+6.  Output of executables:  ROOT ntuples and arrays containing calibration constants which can be moved to online database.
+
+7.  Any changes in the *.cpp files -> have to recompile again! (scramv1 b)
+
+8.  This is the status on 2006.02.23 !!!!! MANY changes to come!
+
