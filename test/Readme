@@ -17,7 +17,7 @@ Usage of programs listed here:
 
 0.2 Build all packages by executing "scramv1 b" in directories where a BuildFile is present or at the very top ( in src).
 
-1.  Execute "scramv1 b" to create executables for all files in working directory. Uncomment each <bin file...> in turn 
+1.  Execute "scramv1 b" to create executables for all files in working directory. Uncomment each <bin file...> one at a time
     from BuildFile and compile (might work with all at once...) .
 
 2.  Make soft links to all of the executables so you can run from test, alternatively run them from 
@@ -27,7 +27,7 @@ Usage of programs listed here:
         
 	    ./executable_name data_file.bin
 
-4.  Calibration data files are usually in emuslice02:/data/test_results/ 
+4.  Calibration data files are usually in emuslice02:/data/test_results/   - look for recent .bin files (!)
     OR CASTOR. To get them from CASTOR (usually works from an lxplus account) : 
        
 	     rfcp /castor/cern.ch/cms/emuslice/2005/filename .  
