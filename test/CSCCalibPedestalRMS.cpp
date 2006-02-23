@@ -15,7 +15,7 @@
 #include <vector>
 #include "string"
 
-
+//root specific .h files
 #include </afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TROOT.h>
 #include </afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TNtuple.h>
 #include </afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TFile.h>
@@ -38,7 +38,6 @@ class TCalibEvt { public:
   
 };
 
-
 int main(int argc, char **argv) {
 
   CSCAnodeData::setDebug(false);
@@ -58,13 +57,14 @@ int main(int argc, char **argv) {
   calibevt = calibtree->Branch("EVENT", &calib_evt, "adc[8]/I:ped_mean/F:strip/I:time[8]/F:chamber/I:event/I:layer/I");
 
   int maxEvents = 900000;
-  int mismatch = 0;
+  int misMatch = 0;
   std::string datafile=argv[1];
+  std::string chamber_id;  
   int dmbID=-999,crateID=-999,chamber_num,sector;
-  int i_chamber=0,ilayer=0;
+  int i_chamber=0,i_layer=0;
   int reportedChambers =0;
   int fff,ret_code;  
-  std::string chamber_id;
+  
   
   condbc *cdb = new condbc(); 
   cscmap *map = new cscmap();
@@ -76,31 +76,28 @@ int main(int argc, char **argv) {
   
   int evt=0;
   std::vector<int> newadc;
-  float ped_mean=0.0,t=0.0;
-  int ped_sum = 0, strip =-999;
   std::vector<int> adc;
-  
-  double a_pedestal[6][80];
-  double a_pedestal_sq[6][80];
-  double a_ped[6][80];
-  int a_dmbID[6][80];
-  int a_chamberID[6][80];
-  double new_ped[480];
-  double new_rms[480];
+  float pedMean=0.0,t=0.0;
+  int pedSum = 0, strip =-999;
+
+  //arrays
+  double arrayOfPed[6][80];
+  double arrayOfPedSquare[6][80];
+  double arrayPed[6][80];
+  double newPed[480];
+  double newRMS[480];
   
   for(int i=0;i<6;i++){
     for (int j=0; j<80; j++){
-      a_pedestal[i][j] = 0.;
-      a_pedestal_sq[i][j] = 0.;
-      a_ped[i][j]=0.;
-      a_dmbID[i][j]=0;
-      a_chamberID[i][j]=0;
+      arrayOfPed[i][j] = 0.;
+      arrayOfPedSquare[i][j] = 0.;
+      arrayPed[i][j]=0.;
     }
   }
   
   for (int i=0;i<480;i++){
-    new_ped[i]=0;
-    new_rms[i]=0;
+    newPed[i]=0;
+    newRMS[i]=0;
   }
   
   const unsigned short *dduBuf=0;
@@ -113,7 +110,7 @@ int main(int argc, char **argv) {
     try {
       length= ddu.next(dduBuf);    
     } catch (std::runtime_error err ){
-      std::cout <<"digi Anal:: " << err.what()<<"  end of file?" << std::endl;
+      std::cout <<"Calibration:: " << err.what()<<"  end of file?" << std::endl;
       break;
     }
     unsigned short * buf = (unsigned short *) dduBuf;
@@ -124,13 +121,13 @@ int main(int argc, char **argv) {
     int NChambers = cscData.size();
     int repChambers = dduEvent.header().ncsc();
     std::cout << " Reported Chambers = " << repChambers <<"   "<<NChambers<< std::endl;
-    if (NChambers!=repChambers) { std::cout<< "mismatched size!!!" << std::endl; mismatch++;}
+    if (NChambers!=repChambers) { std::cout<< "misMatched size!!!" << std::endl; misMatch++;}
        
     evt++;
 
     for (i_chamber=0; i_chamber<NChambers; i_chamber++) {  
-      for(ilayer = 1; ilayer <= 6; ++ilayer) {
-	std::vector<CSCStripDigi> digis = cscData[i_chamber].stripDigis(ilayer) ;
+      for(i_layer = 1; i_layer <= 6; ++i_layer) {
+	std::vector<CSCStripDigi> digis = cscData[i_chamber].stripDigis(i_layer) ;
 	const CSCDMBHeader &thisDMBheader = cscData[i_chamber].dmbHeader();
 	if (thisDMBheader.cfebAvailable()){
 	  dmbID = cscData[i_chamber].dmbHeader().dmbID();
@@ -141,14 +138,14 @@ int main(int argc, char **argv) {
 	    strip = digis[i].getStrip();
 	    adc = digis[i].getADCCounts();
 	    
-	    ped_sum =adc[0]+adc[1];
-	    ped_mean = (float)ped_sum/2.0;
+	    pedSum =adc[0]+adc[1];
+	    pedMean = (float)pedSum/2.0;
 	    
 	    calib_evt.event    = event;
-	    calib_evt.ped_mean = ped_mean;
+	    calib_evt.pedMean = pedMean;
 	    calib_evt.strip    = strip;
 	    calib_evt.chamber  = i_chamber;
-	    calib_evt.layer    = ilayer;
+	    calib_evt.layer    = i_layer;
 
 	    int offset = event / 20;
 	    
@@ -164,9 +161,9 @@ int main(int argc, char **argv) {
 
 	      calibtree->Fill();
 
-	    a_ped[ilayer-1][strip-1] = ped_mean;
-	    a_pedestal[ilayer - 1][strip - 1] += ped_mean;
-	    a_pedestal_sq[ilayer - 1][strip - 1] += ped_mean*ped_mean ;
+	    arrayPed[i_layer-1][strip-1] = pedMean;
+	    arrayOfPed[i_layer - 1][strip - 1] += pedMean;
+	    arrayOfPedSquare[i_layer - 1][strip - 1] += pedMean*pedMean ;
 	  }//digi.size()
 	}//cfeb available
       }//layer
@@ -182,12 +179,12 @@ int main(int argc, char **argv) {
       double the_ped =0.;
       double the_rsquare = 0.;
       
-      the_ped = a_ped[i][j];
-      mean_ped = a_pedestal[i][j] / evt;
-      new_ped[fff] = mean_ped;
-      mean_ped_sq = a_pedestal_sq[i][j] / evt;
+      the_ped = arrayPed[i][j];
+      mean_ped = arrayOfPed[i][j] / evt;
+      newPed[fff] = mean_ped;
+      mean_ped_sq = arrayOfPedSquare[i][j] / evt;
       the_rms = sqrt(abs(mean_ped_sq - mean_ped*mean_ped));
-      new_rms[fff] = the_rms;
+      newRMS[fff] = the_rms;
       the_rsquare = (the_ped-mean_ped)*(the_ped-mean_ped)/(the_rms*the_rms*the_rms*the_rms); 
     }
   }
@@ -202,8 +199,8 @@ int main(int argc, char **argv) {
   
   // to send this array to DB uncomment thenext two lines!
 
-  //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, new_ped,2, &ret_code);
-  //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, new_rms,2, &ret_code);
+  //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newPed,2, &ret_code);
+  //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newRMS,2, &ret_code);
   
 
   calibfile->Write();   

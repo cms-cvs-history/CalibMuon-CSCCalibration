@@ -1,7 +1,7 @@
-<bin file=CSCWireHits.cpp>
+#<bin file=CSCWireHits.cpp>
 #<bin file=gains_rms.cpp>
 #<bin file=cross_talk.cpp>
-#<bin file=CSCCalibPedestalRMS.cpp>
+<bin file=CSCCalibPedestalRMS.cpp>
 #<bin file=cfeb_con.cpp>
 #<bin file=calib1.cpp>
 #<bin file=orig.cpp>
