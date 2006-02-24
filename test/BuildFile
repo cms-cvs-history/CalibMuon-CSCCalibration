@@ -1,5 +1,8 @@
-<bin file=CSCWireHits.cpp>
-#<bin file=CSCCalibPedestalRMS.cpp>
+#<bin file=CSCWireHits.cpp>
+#<bin file=CSCCalibGainsRMS.cpp>
+#<bin file=CSCCalibCrossTalk.cpp>
+#<bin file=CSCCalibCFEBConnect.cpp>
+<bin file=CSCCalibPedestalRMS.cpp>
 <use name=EventFilter/CSCRawToDigi>
 <use name=DataFormats/CSCDigi>
 <use name=IORawData/CSCCommissioning>
