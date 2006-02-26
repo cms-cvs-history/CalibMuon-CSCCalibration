@@ -1,7 +1,7 @@
 //This calculates gains for CFEB, makes root ntuple for debugging, array of 480 entries,sends it to DB.
-//Every strip pulsed 10 times,each time increase charge amplitude by 0.2 (max amplitude charge=2.2),
+//Every strip pulsed 20 times,each time increase charge amplitude by 0.2 (max amplitude charge=2.2),
 //each step 0.2 corresponds to 22.4fC (correct?? must check).
-//First 100 events give strip=1,second 100 events give strip=2 and so on.
+//First 200 events give strip=1,second 200 events give strip=2 and so on...
 
 #include "IORawData/CSCCommissioning/src/FileReaderDDU.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCDDUEventData.h"
@@ -33,7 +33,7 @@
 #define NUMLAYERS 6
 #define NUMSTRIPS  80
 #define NUMCHAMBERS 1
-#define NUMBERPLOTTED 20
+#define NUMBERPLOTTED 10
 
 
 class TCalibEvt { public:
@@ -66,16 +66,17 @@ int main(int argc, char **argv) {
   calibevt = calibtree->Branch("EVENT", &calib_evt, "max_ADC[6][80]/F:charge[6][80]/F:slope[6][80]/F:intercept[6][80]/F");
 
   //data file: nr.of events,chambers read
-  int maxEvents = 200;
+  int maxEvents = 50000;
   int misMatch = 0;
   std::string datafile=argv[1];
   int dmbID=-999,crateID=-999,chamber_num,sector;
   int reportedChambers =0;
-  int fff,ret_code,strip=-999;  
+  int fff, strip=-999;
+  //int ret_code=-999;  
   std::string chamber_id;
 
   //needed for database and mapping
-  condbc *cdb = new condbc(); 
+  //condbc *cdb = new condbc(); 
   cscmap *map = new cscmap();
 
   if (argv[2]) maxEvents = (int) atof(argv[2]);
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
 
   //charge injected in amplitude steps of 0.2 == 22.4fC steps
  
-  const float x[20] = {22.4, 44.8, 67.2, 89.6, 112, 134.4, 156.8, 179.2, 201.6, 224.0, 246.4, 268.8, 291.2, 313.6, 336.0, 358.4, 380.8, 403.2, 425.6, 448};
+  const float x[10] = {22.4, 44.8, 67.2, 89.6, 112, 134.4, 156.8, 179.2, 201.6, 224.0};// 246.4, 268.8, 291.2, 313.6, 336.0, 358.4, 380.8, 403.2, 425.6, 448};
  
   //definition of arrays
   double adcMax[6][80];
@@ -141,15 +142,17 @@ int main(int argc, char **argv) {
   int length = 1;
   
 
+
   //************** START **************//
 
   for (int event = 0; (event < maxEvents)&&(length); ++event) { //loop over all events in file
       
     std::cout << "---------- Event: " << event << "--------------" << std::endl;
+    
     try {
       length= ddu.next(dduBuf);    
     } catch (std::runtime_error err ){
-      std::cout <<"digi Anal:: " << err.what()<<"  end of file?" << std::endl;
+      std::cout <<"Calibration:: " << err.what()<<"  end of file?" << std::endl;
       break;
     }
     unsigned short * buf = (unsigned short *) dduBuf; 
@@ -171,53 +174,64 @@ int main(int argc, char **argv) {
 
 	std::vector<CSCStripDigi> digis = cscData[i_chamber].stripDigis(i_layer) ;
 	const CSCDMBHeader &thisDMBheader = cscData[i_chamber].dmbHeader();
-
+        if(thisDMBheader.cfebAvailable()!=1) std::cout<<" CFEB NOT AVAILABLE"<<std::endl;
+	
 	if (thisDMBheader.cfebAvailable()){
 	  dmbID = cscData[i_chamber].dmbHeader().dmbID();//get DMB ID
 	  crateID = cscData[i_chamber].dmbHeader().crateID();//get crate ID
+          if(crateID == 255) std::cout<<" CRATE ID is 255"<<std::endl;
 	  if(crateID == 255) continue;
-	  
+
 	  for (unsigned int i=0; i<digis.size(); i++){//loop over digis
 	    std::vector<int> adc = digis[i].getADCCounts();
 	    strip = digis[i].getStrip();
+            adcMax[i_layer-1][strip-1]=-99.;  
 
 	    for(unsigned int k=0;k<adc.size();k++){//loop over timeBins
+              float ped=(adc[0]+adc[1])/2.;
 
-	      if(adc[k] > adcMax[i_layer-1][strip-1]) {
-		adcMax[i_layer-1][strip-1]=adc[k];
-		adcMean_max[i_layer-1][strip-1] += adcMax[i_layer-1][strip-1]/8;
-		
+	      if(adc[k] -ped > adcMax[i_layer-1][strip-1]) {
+		adcMax[i_layer-1][strip-1]=adc[k]-ped;
 	      }
 	    }//adc.size
 
-	    // On the 10th event
-	    if (evt%10 == 0){
-	      int ten = int(evt/10) - 1;
-	      maxmodten[ten][i_layer-1][strip-1] = adcMean_max[i_layer-1][strip-1];	     
+	    adcMean_max[i_layer-1][strip-1] += adcMax[i_layer-1][strip-1]/20.;  
+            
+	    // // On the 10th event
+	    if (evt%20 == 0 && (strip-1)%16 == (evt-1)/200){
+	      int ten = int((evt-1)/20)%10 ;
+	      maxmodten[ten][i_layer-1][strip-1] = adcMean_max[i_layer-1][strip-1];
 	    }
 	  }//end digis loop
 	}//end cfeb.available loop
       }//end layer loop
     }//end chamber loop
 
+    if((evt-1)%20==0){
+      for(int ii=0;ii<6;ii++){
+	for(int jj=0;jj<80;jj++){	
+	  adcMean_max[ii][jj]=0.0;
+	}
+      }
+    }
     // Fill the ntuple every 10th event
-    if (evt%10 == 0){
+    if (evt%20 == 0){
       for(unsigned thelayer = 0; thelayer<6; thelayer++) {
 	for (unsigned thestrip=0; thestrip<80; thestrip++){
-	  calib_evt.max_ADC[thelayer][thestrip] = maxmodten[int(evt/10) - 1][thelayer][thestrip];
-	  calib_evt.charge[thelayer][thestrip]=x[int(evt/10) - 1];
+	  calib_evt.max_ADC[thelayer][thestrip] = maxmodten[int(evt/20) - 1][thelayer][thestrip];
+	  calib_evt.charge[thelayer][thestrip]=x[int(evt/20) - 1];
 	}
       }
       
-      calibtree->Fill();
+      calibtree->Fill(); 
     }
   }//end event loop
-  
 
+  
   //create array (480 entries) for database transfer
   for (int layeriter=0; layeriter<6; layeriter++){
     for (int stripiter=0; stripiter<80; stripiter++){
-
+      
       for (int j=0; j<6; j++){//layer	
 	if (j != layeriter) continue;
 	for (int k=0; k<80; k++){//strip
@@ -229,10 +243,10 @@ int main(int argc, char **argv) {
 	  gainSlope = 0.;
 	  gainIntercept = 0.;
 	  chi2 = 0.;
-
-	  for(int ii=0;ii<20;ii++){//numbers       
+	  
+	  for(int ii=0;ii<10;ii++){//numbers       
 	    //do straight line fit ( y = kx + m )
-
+	    
 	    sumOfX += x[ii];
 	    sumOfY += maxmodten[ii][j][k];
 	    sumOfXY += (x[ii]*maxmodten[ii][j][k]);
@@ -258,7 +272,7 @@ int main(int argc, char **argv) {
 	  
 	  double the_gain_sq = 0.;
 	  double the_gain = 0.;
-	  int dmb_id =0;
+	  //int dmb_id =0;
 	  double the_intercept=0.0;
 	  
 	  the_gain = arrayOfGain[j][k];
@@ -271,26 +285,26 @@ int main(int argc, char **argv) {
       }
     }
   }
-
+  
   for(int i=0;i<6;i++){
     for(int j=0;j<80;j++){
       fff = (i*80)+j;
-      //std::cout <<"Layer:   "<<i<<" Strip:   "<<fff<<"  gainSlope:    "<<newGain[fff] <<"   gainIntercept:    "<<newIntercept[fff] <<std::endl;
+      std::cout <<"Layer:   "<<i<<" Strip:   "<<fff<<"  gainSlope:    "<<newGain[fff] <<"   gainIntercept:    "<<newIntercept[fff] <<std::endl;
     }
   }
   
-
+  
   
   //get chamber ID from Igor's mapping
   cout<<"Here is crate and DMB: "<<crateID<<"  "<<dmbID<<endl;
   map->crate_chamber(crateID,dmbID,&chamber_id,&chamber_num,&sector);
   cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<endl;
-
+  
   //info needed for database
   string test1="CSC_slice";
   string test2="gain_slope";
   string test3="gain_intercept";
-
+  
   //*******to send this array to DB uncomment the next two lines*************
   //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newGain,1, &ret_code);
   //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newIntercept,1, &ret_code);
