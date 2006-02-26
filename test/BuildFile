@@ -1,7 +1,51 @@
-#<bin file=CSCWireHits.cpp>
-#<bin file=CSCCalibGainsRMS.cpp>
-#<bin file=CSCCalibCrossTalk.cpp>
-#<bin file=CSCCalibCFEBConnect.cpp>
+<bin file=CSCWireHits.cpp>
+<use name=EventFilter/CSCRawToDigi>
+<use name=DataFormats/CSCDigi>
+<use name=IORawData/CSCCommissioning>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
+<use name=rootcore>
+<use name=root>
+</bin>
+
+<bin file=CSCCalibGainsRMS.cpp>
+<use name=EventFilter/CSCRawToDigi>
+<use name=DataFormats/CSCDigi>
+<use name=IORawData/CSCCommissioning>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
+<use name=rootcore>
+<use name=root>
+</bin>
+
+<bin file=CSCCalibCrossTalk.cpp>
+<use name=EventFilter/CSCRawToDigi>
+<use name=DataFormats/CSCDigi>
+<use name=IORawData/CSCCommissioning>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
+<use name=rootcore>
+<use name=root>
+</bin>
+
+<bin file=CSCCalibCFEBConnect.cpp>
+<use name=EventFilter/CSCRawToDigi>
+<use name=DataFormats/CSCDigi>
+<use name=IORawData/CSCCommissioning>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
+<use name=rootcore>
+<use name=root>
+</bin>
+
 <bin file=CSCCalibPedestalRMS.cpp>
 <use name=EventFilter/CSCRawToDigi>
 <use name=DataFormats/CSCDigi>
@@ -13,7 +57,7 @@
 <use name=rootcore>
 <use name=root>
 </bin>
-#</bin>
+
 
 
 
