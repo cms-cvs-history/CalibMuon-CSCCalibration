@@ -24,8 +24,7 @@ Usage of programs listed here:
 
     to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area.
 
-1.  Execute "scramv1 b" to create executables for all files in working directory. Uncomment each <bin file...> one at a time
-    from BuildFile and compile (might work with all at once...) .
+1.  Execute "scramv1 b" to create executables for all files in working directory.
 
 2.  Make soft links to all of the executables so you can run from test, alternatively run them from 
     CMSSW_x_x_x/CMSSW_x_x_x/test/slc3_ia32_gcc323/  where executables will be put.
