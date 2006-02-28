@@ -59,6 +59,16 @@
 </bin>
 
 
-
+<bin file=CSCCalibAutoCorrMat.cpp>
+<use name=EventFilter/CSCRawToDigi>
+<use name=DataFormats/CSCDigi>
+<use name=IORawData/CSCCommissioning>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
+<use name=rootcore>
+<use name=root>
+</bin>
 
 
