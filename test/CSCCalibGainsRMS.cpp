@@ -1,7 +1,11 @@
-//This calculates gains for CFEB, makes root ntuple for debugging, array of 480 entries,sends it to DB.
-//Every strip pulsed 20 times,each time increase charge amplitude by 0.2 (max amplitude charge=2.2),
-//each step 0.2 corresponds to 22.4fC (correct?? must check).
-//First 200 events give strip=1,second 200 events give strip=2 and so on...
+/*
+  authors: Stan Durkin, Oana Boeriu, Nicole Ippolito
+
+ This calculates gains for CFEB, makes root ntuple for debugging, array of 480 entries,sends it to DB.
+ Every strip pulsed 20 times,each time increase charge amplitude by 0.2 (max amplitude charge=2.2),
+ each step 0.2 corresponds to 22.4fC.
+ First 200 events give strip=1,second 200 events give strip=2 and so on.
+*/
 
 #include "IORawData/CSCCommissioning/src/FileReaderDDU.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCDDUEventData.h"
@@ -30,19 +34,16 @@
 
 //constants declaration
 #define NUMMODTEN 200
-#define NUMLAYERS 6
-#define NUMSTRIPS  80
-#define NUMCHAMBERS 1
+#define LAYERS 6
+#define STRIPS  80
+#define CHAMBERS 5
 #define NUMBERPLOTTED 10
 
 
 class TCalibEvt { public:
-  Float_t max_ADC[6][80];
-  Float_t charge[6][80];
-  Float_t slope[6][80];
-  Float_t intercept[6][80];
+  Float_t max_ADC[CHAMBERS][LAYERS][STRIPS];
+  Float_t charge[CHAMBERS][LAYERS][STRIPS];
 };
-
 
 int main(int argc, char **argv) {
 
@@ -63,13 +64,13 @@ int main(int argc, char **argv) {
   
   calibfile = new TFile("calibgains.root","RECREATE","Calibration Ntuple");
   calibtree = new TTree("Calibration","Gains");
-  calibevt = calibtree->Branch("EVENT", &calib_evt, "max_ADC[6][80]/F:charge[6][80]/F:slope[6][80]/F:intercept[6][80]/F");
+  calibevt = calibtree->Branch("EVENT", &calib_evt, "max_ADC[1][6][80]/F:charge[1][6][80]/F");
 
   //data file: nr.of events,chambers read
-  int maxEvents = 50000;
+  int maxEvents = 500000;
   int misMatch = 0;
   std::string datafile=argv[1];
-  int dmbID=-999,crateID=-999,chamber_num,sector;
+  int dmbID[CHAMBERS],crateID[CHAMBERS],chamber_num,sector;
   int reportedChambers =0;
   int fff, strip=-999;
   //int ret_code=-999;  
@@ -98,39 +99,41 @@ int main(int argc, char **argv) {
   const float x[10] = {22.4, 44.8, 67.2, 89.6, 112, 134.4, 156.8, 179.2, 201.6, 224.0};// 246.4, 268.8, 291.2, 313.6, 336.0, 358.4, 380.8, 403.2, 425.6, 448};
  
   //definition of arrays
-  double adcMax[6][80];
-  double adcMean_max[6][80];
-  double arrayOfGain[6][80];
-  double arrayOfGainSquare[6][80];
-  double arrayOfIntercept[6][80];
-  double arrayOfInterceptSquare[6][80];
+  double adcMax[CHAMBERS][LAYERS][STRIPS];
+  double adcMean_max[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfGain[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfGainSquare[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfIntercept[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfInterceptSquare[CHAMBERS][LAYERS][STRIPS];
   double newGain[480];
   double newIntercept[480];
-  float maxmodten[NUMMODTEN][NUMLAYERS][NUMSTRIPS];
+  float maxmodten[NUMMODTEN][CHAMBERS][LAYERS][STRIPS];
 
 
  //initialize arrays
   for (int i=0; i<NUMMODTEN; i++){
-    for (int j=0; j<NUMLAYERS; j++){
-      for (int k=0; k<NUMSTRIPS; k++){
-	maxmodten[i][j][k] = -999.;
+    for (int j=0; j<CHAMBERS; j++){
+      for (int k=0; k<LAYERS; k++){
+	for (int l=0;l<STRIPS;l++){
+	  maxmodten[i][j][k][l] = -999.;
+	}
       }
     }
   }
-  
-  for (int i=0; i<6; i++){
-    for (int j=0; j<80; j++){
-      arrayOfGain[i][j] = 0.;
-      arrayOfGainSquare[i][j] = 0.;
-      arrayOfGain[i][j]=0.;
 
-      arrayOfIntercept[i][j]=0.;
-      arrayOfInterceptSquare[i][j]=0.;
-      adcMax[i][j]=-999.;
-      adcMean_max[i][j]=0.0;
+  for (int i=0; i<CHAMBERS; i++){
+    for (int j=0; j<LAYERS; j++){
+      for (int k=0;k<STRIPS;k++){
+	arrayOfGain[i][j][k]       = -999.;
+	arrayOfGainSquare[i][j][k] = -999.;
+	arrayOfGain[i][j][k]       = -999.;
+	arrayOfIntercept[i][j][k]  = -999.;
+	arrayOfInterceptSquare[i][j][k]=-999.;
+	adcMax[i][j][k]            = -999.;
+	adcMean_max[i][j][k]       = -999.;
+      }
     }
   }
-
     
   for (int i=0;i<480;i++){
     newGain[i]=0;
@@ -141,14 +144,11 @@ int main(int argc, char **argv) {
   const unsigned short *dduBuf=0;
   int length = 1;
   
-
-
   //************** START **************//
 
   for (int event = 0; (event < maxEvents)&&(length); ++event) { //loop over all events in file
       
-    std::cout << "---------- Event: " << event << "--------------" << std::endl;
-    
+    std::cout << "---------- Event: " << event << "--------------" << std::endl;printf(" length %d \n",length);
     try {
       length= ddu.next(dduBuf);    
     } catch (std::runtime_error err ){
@@ -168,147 +168,163 @@ int main(int argc, char **argv) {
     if (NChambers!=repChambers) { std::cout<< "misMatched size!!!" << std::endl; misMatch++;}
     
 
-    for (int i_chamber=0; i_chamber<1; i_chamber++) {//loop over all DMBs      
-
+    for (int i_chamber=0; i_chamber<NChambers; i_chamber++) {//loop over all DMBs   
+   
       for(int i_layer = 1; i_layer <=6; ++i_layer) {//loop over all layers in chambers
-
+	
 	std::vector<CSCStripDigi> digis = cscData[i_chamber].stripDigis(i_layer) ;
 	const CSCDMBHeader &thisDMBheader = cscData[i_chamber].dmbHeader();
-        if(thisDMBheader.cfebAvailable()!=1) std::cout<<" CFEB NOT AVAILABLE"<<std::endl;
-	
+        
 	if (thisDMBheader.cfebAvailable()){
-	  dmbID = cscData[i_chamber].dmbHeader().dmbID();//get DMB ID
-	  crateID = cscData[i_chamber].dmbHeader().crateID();//get crate ID
-          if(crateID == 255) std::cout<<" CRATE ID is 255"<<std::endl;
-	  if(crateID == 255) continue;
-
+	  dmbID[i_chamber] = cscData[i_chamber].dmbHeader().dmbID();//get DMB ID
+	  crateID[i_chamber] = cscData[i_chamber].dmbHeader().crateID();//get crate ID
+	  if(crateID[i_chamber] == 255) continue;
+	  
 	  for (unsigned int i=0; i<digis.size(); i++){//loop over digis
 	    std::vector<int> adc = digis[i].getADCCounts();
 	    strip = digis[i].getStrip();
-            adcMax[i_layer-1][strip-1]=-99.;  
-
+            adcMax[i_chamber][i_layer-1][strip-1]=-99.;  
 	    for(unsigned int k=0;k<adc.size();k++){//loop over timeBins
               float ped=(adc[0]+adc[1])/2.;
-
-	      if(adc[k] -ped > adcMax[i_layer-1][strip-1]) {
-		adcMax[i_layer-1][strip-1]=adc[k]-ped;
+	      if(adc[k]-ped > adcMax[i_chamber][i_layer-1][strip-1]) {
+		adcMax[i_chamber][i_layer-1][strip-1]=adc[k]-ped;
 	      }
 	    }//adc.size
-
-	    adcMean_max[i_layer-1][strip-1] += adcMax[i_layer-1][strip-1]/20.;  
+	    adcMean_max[i_chamber][i_layer-1][strip-1] += adcMax[i_chamber][i_layer-1][strip-1]/20.;  
             
 	    // // On the 10th event
-	    if (evt%20 == 0 && (strip-1)%16 == (evt-1)/200){
+	    if (evt%20 == 0&&(strip-1)%16==(evt-1)/200){
 	      int ten = int((evt-1)/20)%10 ;
-	      maxmodten[ten][i_layer-1][strip-1] = adcMean_max[i_layer-1][strip-1];
+	      maxmodten[ten][i_chamber][i_layer-1][strip-1] = adcMean_max[i_chamber][i_layer-1][strip-1];
 	    }
 	  }//end digis loop
 	}//end cfeb.available loop
       }//end layer loop
     }//end chamber loop
-
+    
     if((evt-1)%20==0){
-      for(int ii=0;ii<6;ii++){
-	for(int jj=0;jj<80;jj++){	
-	  adcMean_max[ii][jj]=0.0;
+      for(int ii=0;ii<CHAMBERS;ii++){
+	for(int jj=0;jj<LAYERS;jj++){
+	  for(int kk=0;kk<STRIPS;kk++){
+	    adcMean_max[ii][jj][kk]=0.0;
+	  }
 	}
       }
     }
-    // Fill the ntuple every 10th event
+    
+    // Fill the ntuple every 20th event
     if (evt%20 == 0){
-      for(unsigned thelayer = 0; thelayer<6; thelayer++) {
-	for (unsigned thestrip=0; thestrip<80; thestrip++){
-	  calib_evt.max_ADC[thelayer][thestrip] = maxmodten[int(evt/20) - 1][thelayer][thestrip];
-	  calib_evt.charge[thelayer][thestrip]=x[int(evt/20) - 1];
+      for (int thechamber = 0; thechamber<CHAMBERS; thechamber++){
+	for(int thelayer = 0; thelayer<LAYERS; thelayer++) {
+	  for (int thestrip=0; thestrip<STRIPS; thestrip++){
+	    calib_evt.max_ADC[thechamber][thelayer][thestrip] = maxmodten[int(evt/20) - 1][thechamber][thelayer][thestrip];
+	    calib_evt.charge[thechamber][thelayer][thestrip]=x[int(evt/20) - 1];
+	  }
 	}
       }
-      
       calibtree->Fill(); 
     }
   }//end event loop
 
   
   //create array (480 entries) for database transfer
-  for (int layeriter=0; layeriter<6; layeriter++){
-    for (int stripiter=0; stripiter<80; stripiter++){
-      
-      for (int j=0; j<6; j++){//layer	
-	if (j != layeriter) continue;
-	for (int k=0; k<80; k++){//strip
-	  if (k != stripiter) continue;
-	  sumOfX = 0.;
-	  sumOfY = 0.;
-	  sumOfXY = 0.;
-	  sumx2 = 0.;
-	  gainSlope = 0.;
-	  gainIntercept = 0.;
-	  chi2 = 0.;
-	  
-	  for(int ii=0;ii<10;ii++){//numbers       
-	    //do straight line fit ( y = kx + m )
-	    
-	    sumOfX += x[ii];
-	    sumOfY += maxmodten[ii][j][k];
-	    sumOfXY += (x[ii]*maxmodten[ii][j][k]);
-	    sumx2 += (x[ii]*x[ii]);
-	    
-	    gainSlope= ((NUMBERPLOTTED*sumOfXY) - (sumOfX * sumOfY))/((NUMBERPLOTTED*sumx2) - (sumOfX*sumOfX));//k
-	    gainIntercept = ((sumOfY*sumx2)-(sumOfX*sumOfXY))/((NUMBERPLOTTED*sumx2)-(sumOfX*sumOfX));//m
-	    chi2  += (maxmodten[ii][j][k]-(gainIntercept+(gainSlope*x[ii])))*(maxmodten[ii][j][k]-(gainIntercept+(gainSlope*x[ii])));
-	    
-	    if(chi2<min1){
-	      min1=chi2;
-	      gainSlope=gainSlope;
-	      gainIntercept=gainIntercept;
-	    }
-	  }
-	  
-	  arrayOfGain[j][k] += gainSlope;
-	  arrayOfGainSquare[j][k] += gainSlope*gainSlope;
-	  arrayOfIntercept[j][k] += gainIntercept;
-	  arrayOfInterceptSquare[j][k] += gainIntercept*gainIntercept; 
-	  
-	  fff = (j*80)+k;
-	  
-	  double the_gain_sq = 0.;
-	  double the_gain = 0.;
-	  //int dmb_id =0;
-	  double the_intercept=0.0;
-	  
-	  the_gain = arrayOfGain[j][k];
-	  the_gain_sq = arrayOfGainSquare[j][k];
-	  the_intercept = arrayOfIntercept[j][k];
-	  newIntercept[fff] = the_intercept;
-	  newGain[fff] = the_gain;
-	  
+  for(int chamberiter=0;chamberiter<1;chamberiter++){
+    double the_gain_sq = 0.;
+    double the_gain = 0.;
+    double the_intercept=0.0; 
+    
+    
+    for (int thischamber=0; thischamber<CHAMBERS;thischamber++){
+      for (int thislayer=0; thislayer<LAYERS;thislayer++){
+	for (int thisstrip=0; thisstrip<STRIPS;thisstrip++){
+	  arrayOfGain[thischamber][thislayer][thisstrip]       = 0.;
+	  arrayOfGainSquare[thischamber][thislayer][thisstrip] = 0.;
+	  arrayOfIntercept[thischamber][thislayer][thisstrip]  = 0.;
+	  arrayOfInterceptSquare[thischamber][thislayer][thisstrip] = 0.;
 	}
       }
     }
-  }
-  
-  for(int i=0;i<6;i++){
-    for(int j=0;j<80;j++){
-      fff = (i*80)+j;
-      std::cout <<"Layer:   "<<i<<" Strip:   "<<fff<<"  gainSlope:    "<<newGain[fff] <<"   gainIntercept:    "<<newIntercept[fff] <<std::endl;
+        
+    for (int cham=0;cham<1;cham++){
+      if (cham !=chamberiter) continue;
+            
+      for (int layeriter=0; layeriter<6; layeriter++){
+	for (int stripiter=0; stripiter<80; stripiter++){
+	  
+	  for (int j=0; j<6; j++){//layer	
+	    if (j != layeriter) continue;
+	    
+	    for (int k=0; k<80; k++){//strip
+	      if (k != stripiter) continue;
+	      sumOfX = 0.;
+	      sumOfY = 0.;
+	      sumOfXY = 0.;
+	      sumx2 = 0.;
+	      gainSlope = 0.;
+	      gainIntercept = 0.;
+	      chi2 = 0.;
+	      
+	      for(int ii=0;ii<10;ii++){//numbers       
+		//do straight line fit ( y = kx + m )
+		sumOfX += x[ii];
+		sumOfY += maxmodten[ii][cham][j][k];
+		sumOfXY += (x[ii]*maxmodten[ii][cham][j][k]);
+		sumx2 += (x[ii]*x[ii]);
+		
+		gainSlope= ((NUMBERPLOTTED*sumOfXY) - (sumOfX * sumOfY))/((NUMBERPLOTTED*sumx2) - (sumOfX*sumOfX));//k
+		gainIntercept = ((sumOfY*sumx2)-(sumOfX*sumOfXY))/((NUMBERPLOTTED*sumx2)-(sumOfX*sumOfX));//m
+		chi2  += (maxmodten[ii][cham][j][k]-(gainIntercept+(gainSlope*x[ii])))*(maxmodten[ii][cham][j][k]-(gainIntercept+(gainSlope*x[ii])));
+		
+		if(chi2<min1){
+		  min1=chi2;
+		  gainSlope=gainSlope;
+		  gainIntercept=gainIntercept;
+		}
+	      }
+	      
+	      arrayOfGain[cham][j][k]       += gainSlope;
+	      arrayOfGainSquare[cham][j][k] += gainSlope*gainSlope;
+	      arrayOfIntercept[cham][j][k]  += gainIntercept;
+	      arrayOfInterceptSquare[cham][j][k] += gainIntercept*gainIntercept; 
+	      
+	      fff = (j*80)+k; //this is for 480 entries in the array; obsolite soon!
+	    
+	      the_gain          = arrayOfGain[cham][j][k];
+	      the_gain_sq       = arrayOfGainSquare[cham][j][k];
+	      the_intercept     = arrayOfIntercept[cham][j][k];
+	      newIntercept[fff] = the_intercept;
+	      newGain[fff]      = the_gain;
+	      
+	    }//k loop
+	  }//j loop
+	}//stripiter loop
+      }//layiter loop
+    }//cham loop
+  }//chamberiter loop
+
+  for(int i=0;i<CHAMBERS;i++){
+    for(int j=0;j<LAYERS;j++){
+      for (int k=0;k<STRIPS;k++){
+	fff = (j*80)+k; //this is for 480 entries in the array; obsolite soon!
+	//std::cout <<"Chamber: "<<i<<" Layer:   "<<i<<" Strip:   "<<fff<<"  Slope:    "<<newGain[fff] <<"  Intercept:    "<<newIntercept[fff] <<std::endl;
+      }
     }
+    //get chamber ID from Igor's mapping        
+    int new_crateID = crateID[i];
+    int new_dmbID   = dmbID[i];
+    std::cout<<"Here is crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
+    map->crate_chamber(new_crateID,new_dmbID,&chamber_id,&chamber_num,&sector);
+    std::cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<std::endl;
+    //info needed for database
+    string test1="CSC_slice";
+    string test2="gain_slope";
+    string test3="gain_intercept";
+    
+    //*******to send this array to DB uncomment the next two lines*************
+    //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newGain,1, &ret_code);
+    //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newIntercept,1, &ret_code);
   }
-  
-  
-  
-  //get chamber ID from Igor's mapping
-  cout<<"Here is crate and DMB: "<<crateID<<"  "<<dmbID<<endl;
-  map->crate_chamber(crateID,dmbID,&chamber_id,&chamber_num,&sector);
-  cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<endl;
-  
-  //info needed for database
-  string test1="CSC_slice";
-  string test2="gain_slope";
-  string test3="gain_intercept";
-  
-  //*******to send this array to DB uncomment the next two lines*************
-  //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newGain,1, &ret_code);
-  //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newIntercept,1, &ret_code);
-  
+    
   //root ntuple end
   calibfile->Write();   
   calibfile->Close();
