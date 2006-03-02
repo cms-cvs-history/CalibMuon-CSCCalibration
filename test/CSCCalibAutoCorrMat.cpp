@@ -1,9 +1,13 @@
+/*
+
+  Author: Stan Durkin
+
+*/
+
 #include "IORawData/CSCCommissioning/src/FileReaderDDU.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCDDUEventData.h"
 #include "DataFormats/CSCDigi/interface/CSCStripDigi.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCEventData.h"
-#include "EventFilter/CSCRawToDigi/interface/CSCAnodeData.h"
-#include "EventFilter/CSCRawToDigi/interface/CSCALCTHeader.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCCLCTData.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCTMBData.h"
 #include "EventFilter/CSCRawToDigi/interface/CSCDDUTrailer.h"
@@ -25,9 +29,14 @@
 #include "/afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TCanvas.h"
 #include "/afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TTree.h"
 
+//constants declaration
+#define CHAMBERS 5
+#define LAYERS 6
+#define STRIPS 80
+
 int main(int argc, char **argv) {
 
-  //for debugging purposes from Alex Tumanov's code
+  //for debugging purpose from Alex Tumanov's code
   //set to true if you wish to debug data
   CSCAnodeData::setDebug(false);
   CSCALCTHeader::setDebug(false);
@@ -41,10 +50,9 @@ int main(int argc, char **argv) {
   int misMatch = 0;
   std::string datafile=argv[1];
   std::string chamber_id;  
-  int dmbID=-999,crateID=-999,chamber_num,sector;
-  int i_chamber=0,i_layer=0;
+  int dmbID[CHAMBERS],crateID[CHAMBERS],chamber_num,sector;
   int reportedChambers =0;
-  int fff,ret_code;  
+  int ret_code;  
 
   //needed for database and mapping
   condbc *cdb = new condbc(); 
@@ -55,16 +63,14 @@ int main(int argc, char **argv) {
   FileReaderDDU ddu;
   ddu.open(datafile.c_str());
 
-  //some variable declaration
-  int evt=0;
-
+  //variable declaration
   std::vector<int> adc;
   Chamber_AutoCorrMat cam[5];
-  for(int k=0;k<5;k++)cam[k].zero();
+  for(int k=0;k<5;k++) cam[k].zero();
+  
   //opening data files and checking data (copied from Alex Tumanov's code)
   const unsigned short *dduBuf=0;
   int length = 1;
-
 
   for (int event = 0; (event < maxEvents)&&(length); ++event) {//loop over all events in file
     std::cout << "---------- Event: " << event << "--------------" << std::endl;
@@ -84,32 +90,54 @@ int main(int argc, char **argv) {
     std::cout << " Reported Chambers = " << repChambers <<"   "<<NChambers<< std::endl;
     if (NChambers!=repChambers) { std::cout<< "misMatched size!!!" << std::endl; misMatch++;}
        
-    evt++;
-
-    for (i_chamber=0; i_chamber<NChambers; i_chamber++) {//loop over all DMBs  
+    for (int i_chamber=0; i_chamber<NChambers; i_chamber++) {//loop over all DMBs  
      
-      for(i_layer = 1; i_layer <= 6; ++i_layer) {//loop over all layers in chambers
-
+      for(int i_layer = 1; i_layer <= LAYERS; ++i_layer) {//loop over all layers in chambers
 	std::vector<CSCStripDigi> digis = cscData[i_chamber].stripDigis(i_layer) ;
-       	for (unsigned int i=0; i<digis.size(); i++){//loop over digis
-	  int strip = digis[i].getStrip();
-	  adc = digis[i].getADCCounts();
-          int tadc[8];
-          for(unsigned int j=0;j<adc.size();j++)tadc[j]=adc[j];
-          cam[i_chamber].add(i_layer-1,strip-1,tadc);
-        }
+	const CSCDMBHeader &thisDMBheader = cscData[i_chamber].dmbHeader();
+
+	if (thisDMBheader.cfebAvailable()){//check that CFEB data exists
+	  dmbID[i_chamber]   = cscData[i_chamber].dmbHeader().dmbID(); //get DMB ID
+	  crateID[i_chamber] = cscData[i_chamber].dmbHeader().crateID(); //get crate ID
+	  if(crateID[i_chamber] == 255) continue; //255 is reserved for old crate, present only 0 and 1
+
+	  for (unsigned int i=0; i<digis.size(); i++){//loop over digis
+	    int strip = digis[i].getStrip();
+	    adc = digis[i].getADCCounts();
+	    int tadc[8];
+	    for(unsigned int j=0;j<adc.size();j++)tadc[j]=adc[j];
+	    cam[i_chamber].add(i_layer-1,strip-1,tadc);
+	  }
+	}
       }
     }
   }
-  // correlation matrices calculated so dump some
+
   float corrmat[12];
   float *tmp;
-  tmp=corrmat;
-  int lay=4;int strip=10;
-  tmp=cam[0].autocorrmat(lay,strip);
-  for(int i=0;i<12;i++)printf(" %5.2f ",tmp[i]);printf("\n");
-  lay=4;strip=11;
-  tmp=cam[0].autocorrmat(lay,strip);
-  for(int i=0;i<12;i++)printf(" %5.2f ",tmp[i]);printf("\n");
+  tmp=corrmat; 
 
-}
+  for (int i=0; i<CHAMBERS; i++){
+    for (int j=0; j<LAYERS; j++){
+      for (int k=0; k<STRIPS; k++){
+	for (int max=0; max<12;max++){
+	  tmp=cam[i].autocorrmat(j,k);
+	  //std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Matrix elements "<<tmp[max]<<std::endl;
+	}
+      }
+    }
+    //get chamber ID from Igor's mapping
+
+    int new_crateID = crateID[i];
+    int new_dmbID   = dmbID[i];
+    std::cout<<"Here is crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
+    map->crate_chamber(new_crateID,new_dmbID,&chamber_id,&chamber_num,&sector);
+    std::cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<std::endl;
+
+    //write to database
+    //*******to send this array to DB uncomment the next two lines*************
+    //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, tmp[max],2, &ret_code);
+
+  }
+
+}//main
