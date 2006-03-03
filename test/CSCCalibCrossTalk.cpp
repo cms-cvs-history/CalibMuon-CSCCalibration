@@ -333,13 +333,14 @@ int main(int argc, char **argv) {
 	double the_chi2_right    = xtalk_chi2_right[i][j][k];
 	double the_chi2_left     = xtalk_chi2_left[i][j][k];
 
-	new_xtalk_intercept_right[fff]     = the_xtalk_right_a ;
-	new_xtalk_intercept_left[fff]     = the_xtalk_left_a ;
-	new_xtalk_slope_right[fff] = the_xtalk_right_b ;
-	new_xtalk_slope_left[fff] = the_xtalk_left_b ;
-	new_rchi2[fff]      = the_chi2_right;
-	new_lchi2[fff]      = the_chi2_left;
-	
+	new_xtalk_intercept_right[fff] = the_xtalk_right_a ;
+	new_xtalk_intercept_left[fff]  = the_xtalk_left_a ;
+	new_xtalk_slope_right[fff]     = the_xtalk_right_b ;
+	new_xtalk_slope_left[fff]      = the_xtalk_left_b ;
+	new_rchi2[fff]                 = the_chi2_right;
+	new_lchi2[fff]                 = the_chi2_left;
+
+	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" new_rchi2 "<<new_rchi2[fff]<<" new_lchi2 "<< new_lchi2[fff]<<endl;
       }//loop over strips
     }//loop over layers
     //get chamber ID from Igor's mapping
@@ -463,7 +464,6 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
       sum_xy_left += i*cross0;
       sum_xy_right += i*cross2;
     }
-
   }  
 
 
@@ -475,7 +475,7 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   aright = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x));
 
   for(i=0;i<119;i++ && conv[0][1]>0.2){
-    chi2_left += (cross0 -(aleft+(bleft*i)))*(cross0 -(aleft+(bleft*i)));
+    chi2_left  += (cross0 -(aleft+(bleft*i)))*(cross0 -(aleft+(bleft*i)));
     chi2_right += (cross2 -(aright+(bright*i)))*(cross2 -(aright+(bright*i)));
   }	
   
@@ -490,6 +490,7 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
     aright=aright;
   }
   
+
   //Now calculating parameters in ns to compensate for drift in peak time
 
   b_left=((nobs*sum_xy_left) - (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x))/6.25;
@@ -498,12 +499,12 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   a_left=b_left-(((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
   a_right=b_right-(((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
 
-  *xleft_a = a_left; 
-  *xleft_b = b_left;
-  *min_left = min_l;
-  *xright_a = a_right;
-  *xright_b = b_right;
-  *min_right = min_r;
+  *xleft_a   = a_left; 
+  *xleft_b   = b_left;
+  *min_left  = chi2_left;
+  *xright_a  = a_right;
+  *xright_b  = b_right;
+  *min_right = chi2_right;
   
 } //CONVOLUTION  
 
