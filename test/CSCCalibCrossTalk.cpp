@@ -510,8 +510,8 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   // a_left=b_left-(((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
   // a_right=b_right-(((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
   
-  a_left  = ((sum_y_left*sumx2) -(sum_x*sum_xy_left)) /((nobs*sumx2)-(sum_x*sum_x))- ((b_left*peakTime)/6.25);
-  a_right = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x))-((b_right*peakTime)/6.25);
+  a_left  = ((sum_y_left*sumx2) -(sum_x*sum_xy_left)) /((nobs*sumx2)-(sum_x*sum_x))- (b_left*peakTime);
+  a_right = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x))-(b_right*peakTime);
   
   *xleft_a   = a_left; 
   *xleft_b   = b_left;
