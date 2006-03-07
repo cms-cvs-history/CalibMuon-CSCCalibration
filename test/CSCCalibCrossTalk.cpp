@@ -503,15 +503,15 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   
 
   //Now calculating parameters in ns to compensate for drift in peak time
-  //was b/6.25
-  b_left = ((nobs*sum_xy_left) -  (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x));
-  b_right=((nobs*sum_xy_right) - (sum_x * sum_y_right))/((nobs*sumx2) - (sum_x*sum_x));
+  
+  b_left = (((nobs*sum_xy_left) -  (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x)))/6.25;
+  b_right=(((nobs*sum_xy_right) - (sum_x * sum_y_right))/((nobs*sumx2) - (sum_x*sum_x)))/6.25;
   
   // a_left=b_left-(((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
   // a_right=b_right-(((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
   
-  a_left  = ((sum_y_left*sumx2) -(sum_x*sum_xy_left)) /((nobs*sumx2)-(sum_x*sum_x))- (b_left*peakTime);
-  a_right = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x))-(b_right*peakTime);
+  a_left  = ((sum_y_left*sumx2) -(sum_x*sum_xy_left)) /((nobs*sumx2)-(sum_x*sum_x))- ((b_left*peakTime)/6.25);
+  a_right = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x))-((b_right*peakTime)/6.25);
   
   *xleft_a   = a_left; 
   *xleft_b   = b_left;
