@@ -3,7 +3,7 @@
   
   This will create arrays (480=whole ME2/3 chamber) of pedestal and RMS values
   which can be sent to online database.
-  It creates a root ntuple for debugging purposes.   
+  It creates a root ntuple for debugging purpose.  
 */
 
 #include "IORawData/CSCCommissioning/src/FileReaderDDU.h"
@@ -39,12 +39,12 @@
 
 class TCalibEvt { public:
   Int_t adc[8];
-    Float_t pedMean;
-    Int_t strip;
-    Float_t time[8];
-    Int_t chamber;
-    Int_t event;
-    Int_t layer;
+  Float_t pedMean;
+  Int_t strip;
+  Float_t time[8];
+  Int_t chamber;
+  Int_t event;
+  Int_t layer;
   
 };
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
   TBranch *calibevt;
   TTree *calibtree;
   TFile *calibfile;
-  
+
   calibfile = new TFile("ntuples/calibpedestal.root","RECREATE","Calibration Ntuple");
   calibtree = new TTree("Calibration","Pedestal");
   calibevt = calibtree->Branch("EVENT", &calib_evt, "adc[8]/I:pedMean/F:strip/I:time[8]/F:chamber/I:event/I:layer/I");
@@ -163,6 +163,7 @@ int main(int argc, char **argv) {
 	    strip = digis[i].getStrip();
 	    adc   = digis[i].getADCCounts();
 	    
+	    
 	    pedSum  = adc[0]+adc[1];
 	    pedMean = (float)pedSum/2.0;
 	    
@@ -172,11 +173,14 @@ int main(int argc, char **argv) {
 	    calib_evt.chamber  = i_chamber;
 	    calib_evt.layer    = i_layer;
 
+	   
+
 	    for(unsigned int k=0;k<adc.size();k++){//loop over timeBins
+	      time = (50. * k)-((event%20)* 6.25)+116.5;	      
 	      
 	      calib_evt.adc[k]  = adc[k];
-	      calib_evt.time[k] = time;
-	      
+	      calib_evt.time[k]  = time;
+
 	    }//adc.size
 	    
 	    calibtree->Fill();
@@ -191,16 +195,22 @@ int main(int argc, char **argv) {
     }//end chamber loop
   }//end events loop
   
-   //create array (480 entries) for database transfer
+
+  //root ntuple end
+  calibfile->Write();   
+  calibfile->Close();
+
+  //create array (480 entries) for database transfer
   for(int myChamber=0; myChamber<CHAMBERS; myChamber++){
     double meanPedestal = 0.;
     double meanPedestalSquare = 0.;
     double theRMS = 0.;
     double thePedestal =0.;
     double theRSquare = 0.;
-    string test1="CSC_slice";
-    string test2="pedestal";
-    string test3="ped_rms";
+    std::string test1="CSC_slice";
+    std::string test2="pedestal";
+    std::string test3="ped_rms";
+    std::string answer;
     
     for (int i=0; i<CHAMBERS; i++){
       if (myChamber !=i) continue;
@@ -216,7 +226,7 @@ int main(int argc, char **argv) {
 	  newRMS[fff]  = theRMS;
 	  theRSquare   = (thePedestal-meanPedestal)*(thePedestal-meanPedestal)/(theRMS*theRMS*theRMS*theRMS); 
 	  
-	  //std::cout <<" chamber "<<i<<" layer "<<j<<" strip "<<fff<<"  ped "<<newPed[fff]<<" RMS "<<newRMS[fff]<<std::endl;
+	  std::cout <<" chamber "<<i<<" layer "<<j<<" strip "<<fff<<"  ped "<<newPed[fff]<<" RMS "<<newRMS[fff]<<std::endl;
 	}
       }
     }
@@ -224,19 +234,24 @@ int main(int argc, char **argv) {
 
     int new_crateID = crateID[myChamber];
     int new_dmbID   = dmbID[myChamber];
-    std::cout<<"Here is crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
+    std::cout<<" Crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
     map->crate_chamber(new_crateID,new_dmbID,&chamber_id,&chamber_num,&sector);
-    std::cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<std::endl;
+    std::cout<<" Above data is for chamber: "<< chamber_id<<" from sector "<<sector<<std::endl;
 
-    //write to database
-    //*******to send this array to DB uncomment the next two lines*************
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newPed,2, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newRMS,2, &ret_code);
+    std::cout<<" DO you want to send constants to DB? "<<std::endl;
+    std::cout<<" Please answer y or n for EACH chamber present! "<<std::endl;
+
+    std::cin>>answer;
+    if(answer=="y"){
+      //SEND CONSTANTS TO DB
+      cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newPed,2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newRMS,2, &ret_code);
+      std::cout<<" Your results were sent to DB !!! "<<std::endl;
+    }else{
+      std::cout<<" NO data was sent!!! "<<std::endl;
+    }
   }
   
-  //root ntuple end
-  calibfile->Write();   
-  calibfile->Close();
   
 }//main
 
