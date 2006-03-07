@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
 	new_rchi2[fff]                 = the_chi2_right;
 	new_lchi2[fff]                 = the_chi2_left;
 
-	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Intecept right "<<new_xtalk_intercept_right[fff]<<" Slope right "<<new_xtalk_slope_right[fff]<<" chi2 right "<<new_rchi2[fff]<<endl;
+	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Intercept right "<<new_xtalk_intercept_right[fff]<<"   Slope right "<<new_xtalk_slope_right[fff]<<"   chi2 right "<<new_rchi2[fff]<<endl;
       }//loop over strips
     }//loop over layers
 
@@ -364,8 +364,7 @@ int main(int argc, char **argv) {
     string test7="xtalk_chi2_right";
     string answer;
 
-    std::cout<<" DO you want to send constants to DB? "<<std::endl;
-    std::cout<<" Please answer y or n for EACH chamber present! "<<std::endl;
+    std::cout<<" DO you want to send constants to DB? "<<" Please answer y or n for EACH chamber present! "<<std::endl;
 
     std::cin>>answer;
     if(answer=="y"){
@@ -375,7 +374,8 @@ int main(int argc, char **argv) {
       cdb->cdb_write(test1,chamber_id,chamber_num,test5,480, new_xtalk_slope_right,   3, &ret_code);
       cdb->cdb_write(test1,chamber_id,chamber_num,test6,480, new_xtalk_slope_right,   3, &ret_code);
       cdb->cdb_write(test1,chamber_id,chamber_num,test7,480, new_rchi2,               3, &ret_code);
-      std::cout<<" Your results were sent to DB !!! "<<std::endl;
+      
+      std::cout<<" Data SENT to DB! "<<std::endl;
     }else{
       std::cout<<" NO data was sent!!! "<<std::endl;
     }
@@ -449,7 +449,9 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   data2=conv[1][imax];
   data3=conv[1][imax+1];
 
-  peakTime=(0.5)*((time1*time1*(data3-data2)+time2*time2*(data1-data3)+time3*time3*(data2-data1))/(time1*(data3-data2)+time2*(data1-data3)+time3*(data2-data1)));
+  peakTime=(0.5)*((time1*time1*(data3-data2)+time2*time2*(data1-data3)+time3*time3*(data2-data1))/(time1*(data3-data2)+time2*(data1-data3)+time3*(data2-data1)))*6.25;
+
+  //std::cout<<"time peak: "<<peakTime<<endl;
   for(l=0;l<3;l++){
     for(i=0;i<119;i++)conv[l][i]=conv[l][i]/max;
   }
@@ -519,6 +521,13 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   *xright_a  = a_right;
   *xright_b  = b_right;
   *min_right = chi2_right;
+
+ //  *xleft_a   = aleft; 
+//   *xleft_b   = bleft;
+//   *min_left  = chi2_left;
+//   *xright_a  = aright;
+//   *xright_b  = bright;
+//   *min_right = chi2_right;
   
 } //CONVOLUTION  
 
