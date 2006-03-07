@@ -36,7 +36,7 @@
 #define LAYERS 6
 #define STRIPS 80
 #define TIMEBINS 8
-
+using namespace std;
 
 class TCalibEvt { public:
   Int_t adc[8];
@@ -112,12 +112,12 @@ int main(int argc, char **argv) {
   float xtalk_slope_right[CHAMBERS][LAYERS][STRIPS];
   float xtalk_chi2_left[CHAMBERS][LAYERS][STRIPS];
   float xtalk_chi2_right[CHAMBERS][LAYERS][STRIPS];
-  float new_xtalk_intercept_right[480];
-  float new_xtalk_intercept_left[480];
-  float new_xtalk_slope_right[480];
-  float new_xtalk_slope_left[480];
-  float new_rchi2[480];
-  float new_lchi2[480];
+  double new_xtalk_intercept_right[480];
+  double new_xtalk_intercept_left[480];
+  double new_xtalk_slope_right[480];
+  double new_xtalk_slope_left[480];
+  double new_rchi2[480];
+  double new_lchi2[480];
 
 
    //initialize arrays  
@@ -252,7 +252,11 @@ int main(int argc, char **argv) {
        }//end loop over layers 
     }//end loop over chambers
   }//end loop over events
-  
+ 
+
+   //root ntuple end
+  calibfile->Write();   
+  calibfile->Close(); 
   
 //printf(" filled data so now do calculations \n");  
   ////////////////////////////////////////////////////////////////////
@@ -340,16 +344,16 @@ int main(int argc, char **argv) {
 	new_rchi2[fff]                 = the_chi2_right;
 	new_lchi2[fff]                 = the_chi2_left;
 
-	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" new_rchi2 "<<new_rchi2[fff]<<" new_lchi2 "<< new_lchi2[fff]<<endl;
+	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Intecept right "<<new_xtalk_intercept_right[fff]<<" Slope right "<<new_xtalk_slope_right[fff]<<" chi2 right "<<new_rchi2[fff]<<endl;
       }//loop over strips
     }//loop over layers
-    //get chamber ID from Igor's mapping
-    
+
+    //get chamber ID from Igor's mapping    
     int new_crateID = crateID[i];
     int new_dmbID   = dmbID[i];
-    std::cout<<"Here is crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
+    std::cout<<" Crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
     map->crate_chamber(new_crateID,new_dmbID,&chamber_id,&chamber_num,&sector);
-    std::cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<std::endl;
+    std::cout<<" Above data is for chamber: "<< chamber_id<<" and sector "<<sector<<std::endl;
     
     string test1="CSC_slice";
     string test2="xtalk_slope_left";
@@ -358,18 +362,24 @@ int main(int argc, char **argv) {
     string test5="xtalk_slope_right";
     string test6="xtalk_intercept_right";
     string test7="xtalk_chi2_right";
-    
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, new_xtalk_intercept_right,2, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, new_xtalk_intercept_left,2, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test4,480, new_rchi2,2,2, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test5,480, new_xtalk_slope_right,2, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test6,480, new_xtalk_slope_left,2, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test7,480, new_lchi2,2, &ret_code);
-   }//loop over chambers
-   
-   //root ntuple end
-   calibfile->Write();   
-   calibfile->Close();
+    string answer;
+
+    std::cout<<" DO you want to send constants to DB? "<<std::endl;
+    std::cout<<" Please answer y or n for EACH chamber present! "<<std::endl;
+
+    std::cin>>answer;
+    if(answer=="y"){
+      cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, new_xtalk_slope_left,    3, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, new_xtalk_intercept_left,3, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test4,480, new_lchi2,               3, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test5,480, new_xtalk_slope_right,   3, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test6,480, new_xtalk_slope_right,   3, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test7,480, new_rchi2,               3, &ret_code);
+      std::cout<<" Your results were sent to DB !!! "<<std::endl;
+    }else{
+      std::cout<<" NO data was sent!!! "<<std::endl;
+    }
+   }//loop over chambers 
 }// main
 
 
@@ -467,7 +477,8 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   }  
 
 
-  //LMS fitting straight line 
+  //LMS fitting straight line y=a+b*x
+
   bleft  = ((nobs*sum_xy_left) - (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x));
   bright = ((nobs*sum_xy_right) - (sum_x * sum_y_right))/((nobs*sumx2) - (sum_x*sum_x));
 
@@ -492,13 +503,16 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   
 
   //Now calculating parameters in ns to compensate for drift in peak time
-
-  b_left=((nobs*sum_xy_left) - (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x))/6.25;
-  b_right=((nobs*sum_xy_right) - (sum_x * sum_y_right))/((nobs*sumx2) - (sum_x*sum_x))/6.25;
+  //was b/6.25
+  b_left = ((nobs*sum_xy_left) -  (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x));
+  b_right=((nobs*sum_xy_right) - (sum_x * sum_y_right))/((nobs*sumx2) - (sum_x*sum_x));
   
-  a_left=b_left-(((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
-  a_right=b_right-(((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
-
+  // a_left=b_left-(((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
+  // a_right=b_right-(((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
+  
+  a_left  = ((sum_y_left*sumx2) -(sum_x*sum_xy_left)) /((nobs*sumx2)-(sum_x*sum_x))- (b_left*peakTime);
+  a_right = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x))-(b_right*peakTime);
+  
   *xleft_a   = a_left; 
   *xleft_b   = b_left;
   *min_left  = chi2_left;
