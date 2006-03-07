@@ -72,12 +72,12 @@ int main(int argc, char **argv) {
   std::string datafile=argv[1];
   int dmbID[CHAMBERS],crateID[CHAMBERS],chamber_num,sector;
   int reportedChambers =0;
-  int fff, strip=-999;
+  int fff,ret_code, strip=-999;
   //int ret_code=-999;  
   std::string chamber_id;
 
   //needed for database and mapping
-  //condbc *cdb = new condbc(); 
+  condbc *cdb = new condbc(); 
   cscmap *map = new cscmap();
 
   if (argv[2]) maxEvents = (int) atof(argv[2]);
@@ -87,11 +87,11 @@ int main(int argc, char **argv) {
 
   //some variables declaration  
   std::vector<int> newadc;
-  float min1=9999999999999.0;
+  float chi2Min=99999999999999999999999999999999999999.0;
   float sumOfX=0.0, sumx2=0.0,sumOfXY=0.0;
   float sumOfY=0.0;
   float chi2=0.0;
-  int evt=0;
+  int evt=0,count=0;
   float gainSlope=-999.0,gainIntercept=-999.0;
 
   //charge injected in amplitude steps of 0.2 == 22.4fC steps
@@ -104,9 +104,11 @@ int main(int argc, char **argv) {
   double arrayOfGain[CHAMBERS][LAYERS][STRIPS];
   double arrayOfGainSquare[CHAMBERS][LAYERS][STRIPS];
   double arrayOfIntercept[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfChi2[CHAMBERS][LAYERS][STRIPS];
   double arrayOfInterceptSquare[CHAMBERS][LAYERS][STRIPS];
   double newGain[480];
   double newIntercept[480];
+  double newChi2[480];
   float maxmodten[NUMMODTEN][CHAMBERS][LAYERS][STRIPS];
 
 
@@ -115,7 +117,7 @@ int main(int argc, char **argv) {
     for (int j=0; j<CHAMBERS; j++){
       for (int k=0; k<LAYERS; k++){
 	for (int l=0;l<STRIPS;l++){
-	  maxmodten[i][j][k][l] = -999.;
+	  maxmodten[i][j][k][l] = 0.;
 	}
       }
     }
@@ -129,6 +131,7 @@ int main(int argc, char **argv) {
 	arrayOfGain[i][j][k]       = -999.;
 	arrayOfIntercept[i][j][k]  = -999.;
 	arrayOfInterceptSquare[i][j][k]=-999.;
+	arrayOfChi2[i][j][k]       = -999.;
 	adcMax[i][j][k]            = -999.;
 	adcMean_max[i][j][k]       = -999.;
       }
@@ -136,8 +139,9 @@ int main(int argc, char **argv) {
   }
     
   for (int i=0;i<480;i++){
-    newGain[i]=0;
-    newIntercept[i]=0;
+    newGain[i]=0.;
+    newIntercept[i]=0.;
+    newChi2[i]=0.;
   }
 
   //opening data files and checking data (copied from Alex Tumanov's code)
@@ -196,6 +200,7 @@ int main(int argc, char **argv) {
 	    if (evt%20 == 0&&(strip-1)%16==(evt-1)/200){
 	      int ten = int((evt-1)/20)%10 ;
 	      maxmodten[ten][i_chamber][i_layer-1][strip-1] = adcMean_max[i_chamber][i_layer-1][strip-1];
+	      
 	    }
 	  }//end digis loop
 	}//end cfeb.available loop
@@ -226,14 +231,18 @@ int main(int argc, char **argv) {
     }
   }//end event loop
 
+   //root ntuple end
+  calibfile->Write();   
+  calibfile->Close();
   
   //create array (480 entries) for database transfer
-  for(int chamberiter=0;chamberiter<1;chamberiter++){
-    double the_gain_sq = 0.;
-    double the_gain = 0.;
-    double the_intercept=0.0; 
-    
-    
+  for(int chamberiter=0; chamberiter<1; chamberiter++){
+  
+    double the_gain_sq   = 0.;
+    double the_gain      = 0.;
+    double the_intercept = 0.; 
+    double the_chi2      = 0.;
+        
     for (int thischamber=0; thischamber<CHAMBERS;thischamber++){
       for (int thislayer=0; thislayer<LAYERS;thislayer++){
 	for (int thisstrip=0; thisstrip<STRIPS;thisstrip++){
@@ -241,6 +250,7 @@ int main(int argc, char **argv) {
 	  arrayOfGainSquare[thischamber][thislayer][thisstrip] = 0.;
 	  arrayOfIntercept[thischamber][thislayer][thisstrip]  = 0.;
 	  arrayOfInterceptSquare[thischamber][thislayer][thisstrip] = 0.;
+	  arrayOfChi2[thischamber][thislayer][thisstrip] = 0.;
 	}
       }
     }
@@ -262,39 +272,43 @@ int main(int argc, char **argv) {
 	      sumx2 = 0.;
 	      gainSlope = 0.;
 	      gainIntercept = 0.;
-	      chi2 = 0.;
+	      chi2 =0.;
 	      
-	      for(int ii=0;ii<10;ii++){//numbers       
-		//do straight line fit ( y = kx + m )
-		sumOfX += x[ii];
+	      float charge[10]={22.4, 44.8, 67.2, 89.6, 112, 134.4, 156.8, 179.2, 201.6, 224.0};
+
+	      for(int ii=0; ii<10; ii++){//numbers    
+		sumOfX += charge[ii];
 		sumOfY += maxmodten[ii][cham][j][k];
-		sumOfXY += (x[ii]*maxmodten[ii][cham][j][k]);
-		sumx2 += (x[ii]*x[ii]);
-		
-		gainSlope= ((NUMBERPLOTTED*sumOfXY) - (sumOfX * sumOfY))/((NUMBERPLOTTED*sumx2) - (sumOfX*sumOfX));//k
-		gainIntercept = ((sumOfY*sumx2)-(sumOfX*sumOfXY))/((NUMBERPLOTTED*sumx2)-(sumOfX*sumOfX));//m
-		chi2  += (maxmodten[ii][cham][j][k]-(gainIntercept+(gainSlope*x[ii])))*(maxmodten[ii][cham][j][k]-(gainIntercept+(gainSlope*x[ii])));
-		
-		if(chi2<min1){
-		  min1=chi2;
-		  gainSlope=gainSlope;
-		  gainIntercept=gainIntercept;
-		}
+		sumOfXY += (charge[ii]*maxmodten[ii][cham][j][k]);
+		sumx2 += (charge[ii]*charge[ii]);
 	      }
+		
+	      //Fit parameters
+	      gainSlope     = ((10*sumOfXY) - (sumOfX * sumOfY))/((10*sumx2) - (sumOfX*sumOfX));//k
+	      gainIntercept = ((sumOfY*sumx2)-(sumOfX*sumOfXY))/((10*sumx2)-(sumOfX*sumOfX));//m
 	      
-	      arrayOfGain[cham][j][k]       += gainSlope;
-	      arrayOfGainSquare[cham][j][k] += gainSlope*gainSlope;
-	      arrayOfIntercept[cham][j][k]  += gainIntercept;
-	      arrayOfInterceptSquare[cham][j][k] += gainIntercept*gainIntercept; 
-	      
-	      fff = (j*80)+k; //this is for 480 entries in the array; obsolite soon!
-	    
-	      the_gain          = arrayOfGain[cham][j][k];
-	      the_gain_sq       = arrayOfGainSquare[cham][j][k];
-	      the_intercept     = arrayOfIntercept[cham][j][k];
-	      newIntercept[fff] = the_intercept;
-	      newGain[fff]      = the_gain;
-	      
+	     for(int ii=0; ii<10; ii++){
+	       chi2  += (maxmodten[ii][cham][j][k]-(gainIntercept+(gainSlope*charge[ii])))*(maxmodten[ii][cham][j][k]-(gainIntercept+(gainSlope*charge[ii])));
+		//std::cout<<"min is "<<chi2<<" layer "<<j<<" strip "<<k<<std::endl;
+	     }
+	     
+	     arrayOfGain[cham][j][k]            = gainSlope;
+	     arrayOfGainSquare[cham][j][k]      = gainSlope*gainSlope;
+	     arrayOfIntercept[cham][j][k]       = gainIntercept;
+	     arrayOfInterceptSquare[cham][j][k] = gainIntercept*gainIntercept; 
+	     arrayOfChi2[cham][j][k]            = chi2;
+	     
+	     fff = (j*80)+k; //this is for 480 entries in the array; obsolite soon!
+	     
+	     the_gain          = arrayOfGain[cham][j][k];
+	     the_gain_sq       = arrayOfGainSquare[cham][j][k];
+	     the_intercept     = arrayOfIntercept[cham][j][k];
+	     the_chi2          = arrayOfChi2[cham][j][k];
+	     //cout<<"HERE "<<the_chi2<<endl;
+	     newIntercept[fff] = the_intercept;
+	     newGain[fff]      = the_gain;
+	     newChi2[fff]      = the_chi2;
+	     
 	    }//k loop
 	  }//j loop
 	}//stripiter loop
@@ -306,28 +320,34 @@ int main(int argc, char **argv) {
     for(int j=0;j<LAYERS;j++){
       for (int k=0;k<STRIPS;k++){
 	fff = (j*80)+k; //this is for 480 entries in the array; obsolite soon!
-	//std::cout <<"Chamber: "<<i<<" Layer:   "<<i<<" Strip:   "<<fff<<"  Slope:    "<<newGain[fff] <<"  Intercept:    "<<newIntercept[fff] <<std::endl;
+	std::cout <<"Chamber: "<<i<<" Layer:   "<<i<<" Strip:   "<<fff<<"  Slope:    "<<newGain[fff] <<"  Intercept:    "<<newIntercept[fff] <<"    chi2 "<<newChi2[fff]<<std::endl;
       }
     }
     //get chamber ID from Igor's mapping        
     int new_crateID = crateID[i];
     int new_dmbID   = dmbID[i];
-    std::cout<<"Here is crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
+    std::cout<<" Crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
     map->crate_chamber(new_crateID,new_dmbID,&chamber_id,&chamber_num,&sector);
-    std::cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<std::endl;
+    std::cout<<" Above data is for chamber:: "<< chamber_id<<" and sector:  "<<sector<<std::endl;
     //info needed for database
     string test1="CSC_slice";
     string test2="gain_slope";
     string test3="gain_intercept";
+    std::string answer;
+
+    std::cout<<" DO you want to send constants to DB? "<<std::endl;
+    std::cout<<" Please answer y or n for EACH chamber present! "<<std::endl;
     
-    //*******to send this array to DB uncomment the next two lines*************
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newGain,1, &ret_code);
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newIntercept,1, &ret_code);
+    std::cin>>answer;
+    if(answer=="y"){
+    //SEND CONSTANTS TO DB
+
+    cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newGain,     3, &ret_code);
+    cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newIntercept,3, &ret_code);
+    }else{
+      std::cout<<" NO data was sent!!! "<<std::endl;
+    }
   }
-    
-  //root ntuple end
-  calibfile->Write();   
-  calibfile->Close();
   
 }// main
 
