@@ -31,6 +31,10 @@ Usage of programs listed here:
 1.  Make soft links to all of the executables so you can run from test, alternatively run them from 
     CMSSW_x_x_x/CMSSW_x_x_x/test/slc3_ia32_gcc323/  where executables will be created.
 
+1.0 Suggestion: create a directory called runs where you have the data.
+
+1.1 Suggestion: create a directory called ntuples where all root files will be put.
+
 2.  Run executables in /test or CMSSW_x_x_x/CMSSW_x_x_x/test/slc3_ia32_gcc323/ directory using:
         
 	    ./executable_name data_file.bin
@@ -48,7 +52,26 @@ Usage of programs listed here:
 
 6.  At present you have to uncomment the lines: cdb->cdb_write(....) to be able o transfer the constants to DB.
 
-  
+  ***********************************************************************************************************
+  *					         ANALYSIS					            *	
+  ***********************************************************************************************************
+        > cd ntuples/
+	> root
+	> .x .root/rootlogon.C (looks nicer)
 
-    This is the status 2006.03.02 !!!!!
+a.  Pedestal values in 5 ME2 chambers:	
+	from inside root type:
+	> .x ped_macro.C
+	
+b. Gains in 5 ME2 chambers:
+	from inside root type:
+	> .x gain_macro.C
+
+c. Cross-talk in 5 ME2 chambers:
+	from inside root type:
+	> .x cros-talk_macro.C
+
+
+
+    This is the status 2006.03.09 !!!!!
 
