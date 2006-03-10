@@ -32,7 +32,7 @@
 #include "/afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TTree.h"
 
 //constants declaration
-#define CHAMBERS 5
+#define CHAMBERS 4
 #define LAYERS 6
 #define STRIPS 80
 #define TIMEBINS 8
@@ -368,12 +368,12 @@ int main(int argc, char **argv) {
 
     std::cin>>answer;
     if(answer=="y"){
-      cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, new_xtalk_slope_left,    3, &ret_code);
-      cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, new_xtalk_intercept_left,3, &ret_code);
-      cdb->cdb_write(test1,chamber_id,chamber_num,test4,480, new_lchi2,               3, &ret_code);
-      cdb->cdb_write(test1,chamber_id,chamber_num,test5,480, new_xtalk_slope_right,   3, &ret_code);
-      cdb->cdb_write(test1,chamber_id,chamber_num,test6,480, new_xtalk_intercept_right,   3, &ret_code);
-      cdb->cdb_write(test1,chamber_id,chamber_num,test7,480, new_rchi2,               3, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, new_xtalk_slope_left,      4, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, new_xtalk_intercept_left,  4, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test4,480, new_lchi2,                 4, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test5,480, new_xtalk_slope_right,     4, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test6,480, new_xtalk_intercept_right, 4, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test7,480, new_rchi2,                 4, &ret_code);
       
       std::cout<<" Data SENT to DB! "<<std::endl;
     }else{
@@ -451,21 +451,20 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
 
   peakTime=(0.5)*((time1*time1*(data3-data2)+time2*time2*(data1-data3)+time3*time3*(data2-data1))/(time1*(data3-data2)+time2*(data1-data3)+time3*(data2-data1)))*6.25;
 
-  //std::cout<<"time peak: "<<peakTime<<endl;
   for(l=0;l<3;l++){
     for(i=0;i<119;i++)conv[l][i]=conv[l][i]/max;
   }
 
   int nobs = 0;
   for (int j=0; j<119; j++){
-    if (conv[1][j]>0.2) nobs++;
+    if (conv[1][j]>0.6) nobs++;
   }
 
   for(i=0;i<119;i++){
     cross0=0.0;
     cross2=0.0;
     
-    if(conv[1][i]>0.2){
+    if(conv[1][i]>0.6){
       cross0=conv[0][i]/(conv[0][i]+conv[1][i]+conv[2][i]);
       cross2=conv[2][i]/(conv[0][i]+conv[1][i]+conv[2][i]);
   
@@ -478,7 +477,6 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
     }
   }  
 
-
   //LMS fitting straight line y=a+b*x
 
   bleft  = ((nobs*sum_xy_left) - (sum_x * sum_y_left))/((nobs*sumx2) - (sum_x*sum_x));
@@ -487,7 +485,7 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   aleft  = ((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x));
   aright = ((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x));
 
-  for(i=0;i<119;i++ && conv[0][1]>0.2){
+  for(i=0;i<119;i++ && conv[0][1]>0.6){
     chi2_left  += (cross0 -(aleft+(bleft*i)))*(cross0 -(aleft+(bleft*i)));
     chi2_right += (cross2 -(aright+(bright*i)))*(cross2 -(aright+(bright*i)));
   }	
@@ -504,16 +502,12 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   }
   
 
-  //Now calculating parameters in ns to compensate for drift in peak time
-  
-  b_left = bleft/6.25;
-  b_right= bright/6.25;
-  
-  // a_left=b_left-(((sum_y_left*sumx2)-(sum_x*sum_xy_left))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
-  // a_right=b_right-(((sum_y_right*sumx2)-(sum_x*sum_xy_right))/((nobs*sumx2)-(sum_x*sum_x)))*peakTime/6.25;
-  
-  a_left  = aleft + (bleft*peakTime/6.25);
-  a_right = aright+ (bright*peakTime/6.25);
+  //Now calculating parameters in ns to compensate for drift in peak time  
+  b_left  = bleft/6.25;
+  b_right = bright/6.25;
+
+  a_left  = aleft  + (bleft*peakTime/6.25);
+  a_right = aright + (bright*peakTime/6.25);
   
   *xleft_a   = a_left; 
   *xleft_b   = b_left;
@@ -522,13 +516,6 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   *xright_b  = b_right;
   *min_right = chi2_right;
 
- //  *xleft_a   = aleft; 
-//   *xleft_b   = bleft;
-//   *min_left  = chi2_left;
-//   *xright_a  = aright;
-//   *xright_b  = bright;
-//   *min_right = chi2_right;
-  
 } //CONVOLUTION  
 
 
