@@ -47,12 +47,39 @@ int main(int argc, char **argv) {
 
   //data file: nr.of events,chambers read
   int maxEvents = 50000;
-  int misMatch = 0;
+  int misMatch = 0,fff;
   std::string datafile=argv[1];
   std::string chamber_id;  
   int dmbID[CHAMBERS],crateID[CHAMBERS],chamber_num,sector;
   int reportedChambers =0;
   int ret_code;  
+  double newMatrix1[480];
+  double newMatrix2[480];
+  double newMatrix3[480];
+  double newMatrix4[480];
+  double newMatrix5[480];
+  double newMatrix6[480];
+  double newMatrix7[480];
+  double newMatrix8[480];
+  double newMatrix9[480];
+  double newMatrix10[480];
+  double newMatrix11[480];
+  double newMatrix12[480];
+
+  for (int i=0;i<480;i++){
+    newMatrix1[i]=0.0;
+    newMatrix2[i]=0.0;
+    newMatrix3[i]=0.0;
+    newMatrix4[i]=0.0;
+    newMatrix5[i]=0.0;
+    newMatrix6[i]=0.0;
+    newMatrix7[i]=0.0;
+    newMatrix8[i]=0.0;
+    newMatrix9[i]=0.0;
+    newMatrix10[i]=0.0;
+    newMatrix11[i]=0.0;
+    newMatrix12[i]=0.0;
+  }
 
   //needed for database and mapping
   condbc *cdb = new condbc(); 
@@ -113,16 +140,45 @@ int main(int argc, char **argv) {
     }
   }
 
-  float corrmat[12];
-  float *tmp;
+  double corrmat[12];
+  double *tmp;
   tmp=corrmat; 
+
+  std::string test1="CSC_slice";
+  std::string test2="elem1";
+  std::string test3="elem2";
+  std::string test4="elem3";
+  std::string test5="elem4";
+  std::string test6="elem5";
+  std::string test7="elem6";
+  std::string test8="elem7";
+  std::string test9="elem8";
+  std::string test10="elem9";
+  std::string test11="elem10";
+  std::string test12="elem11";
+  std::string test13="elem12";
+  std::string answer;
 
   for (int i=0; i<CHAMBERS; i++){
     for (int j=0; j<LAYERS; j++){
       for (int k=0; k<STRIPS; k++){
 	for (int max=0; max<12;max++){
+	  fff = (j*80)+k;
 	  tmp=cam[i].autocorrmat(j,k);
-	  //std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Matrix elements "<<tmp[max]<<std::endl;
+	  newMatrix1[fff]=tmp[0];
+	  newMatrix2[fff]=tmp[1];
+	  newMatrix3[fff]=tmp[2];
+	  newMatrix4[fff]=tmp[3];
+	  newMatrix5[fff]=tmp[4];
+	  newMatrix6[fff]=tmp[5];
+	  newMatrix7[fff]=tmp[6];
+	  newMatrix8[fff]=tmp[7];
+	  newMatrix9[fff]=tmp[8];
+	  newMatrix10[fff]=tmp[9];
+	  newMatrix11[fff]=tmp[10];
+	  newMatrix12[fff]=tmp[11];
+
+	  std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Matrix elements "<<tmp[max]<<std::endl;
 	}
       }
     }
@@ -132,12 +188,30 @@ int main(int argc, char **argv) {
     int new_dmbID   = dmbID[i];
     std::cout<<"Here is crate: "<<new_crateID<<" and DMB:  "<<new_dmbID<<std::endl;
     map->crate_chamber(new_crateID,new_dmbID,&chamber_id,&chamber_num,&sector);
-    std::cout<<"This is from mapping: "<< chamber_id<<"  "<<chamber_num<<"  "<<sector<<std::endl;
-
-    //write to database
-    //*******to send this array to DB uncomment the next two lines*************
-    //cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, tmp[max],2, &ret_code);
-
+    std::cout<<" Above data is for chamber: "<< chamber_id<<" from sector "<<sector<<std::endl;
+     
+    std::cout<<" DO you want to send constants to DB? "<<std::endl;
+    std::cout<<" Please answer y or n for EACH chamber present! "<<std::endl;
+    
+    std::cin>>answer;
+    if(answer=="y"){
+      //SEND CONSTANTS TO DB
+      
+      cdb->cdb_write(test1,chamber_id,chamber_num,test2, 480, newMatrix1, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test3, 480, newMatrix2, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test4, 480, newMatrix3, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test5, 480, newMatrix4, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test6, 480, newMatrix5, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test7, 480, newMatrix6, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test8, 480, newMatrix7, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test9, 480, newMatrix8, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test10,480, newMatrix9, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test11,480, newMatrix10,2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test12,480, newMatrix11,2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test13,480, newMatrix12,2, &ret_code);
+    }else{
+      std::cout<<" NO data was sent!!! "<<std::endl;
+    }
   }
-
+  
 }//main
