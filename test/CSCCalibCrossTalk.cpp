@@ -258,8 +258,7 @@ int main(int argc, char **argv) {
   calibfile->Write();   
   calibfile->Close(); 
   
-//printf(" filled data so now do calculations \n");  
-  ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////iuse==strip-1
   // Now that we have filled our array, extract convd and nconvd
   float adc_ped_sub_left = -999.;
   float adc_ped_sub = -999.;
@@ -269,10 +268,6 @@ int main(int argc, char **argv) {
    for (int i=0; i<CHAMBERS; i++){
     for (int j=0; j<LAYERS; j++){
       for (int k=0; k<STRIPS; k++){
-
-        //printf(" chamber %d layer %d strip %d \n",i,j,k);
-	if (k == 0 || k == (STRIPS - 1)) continue;
-
 	// re-zero convd and nconvd
 	for (int m=0; m<3; m++){
 	  for (int n=0; n<120; n++){
@@ -281,37 +276,34 @@ int main(int argc, char **argv) {
 	  }
 	}
      
-	// Need special cases for k=0, k=N
 	for (int l=0; l < TIMEBINS*20; l++){
-
 	  adc_ped_sub_left  = theadccountsl[i][j][k][l] - (theadccountsl[i][j][k][0] + theadccountsl[i][j][k][1])/2.;	  
 	  adc_ped_sub       = theadccountsc[i][j][k][l] - (theadccountsc[i][j][k][0] + theadccountsc[i][j][k][1])/2.;
 	  adc_ped_sub_right = theadccountsr[i][j][k][l] - (theadccountsr[i][j][k][0] + theadccountsr[i][j][k][1])/2.;
-	 
+
           thebin=thebins[i][j][k][l];
-	 
+	  
 	  if (thebin >= 0 && thebin < 120){
 	    convd[0][thebin]  += adc_ped_sub_left;
 	    nconvd[0][thebin] += 1.0;
 	    
 	    convd[1][thebin]  += adc_ped_sub;
 	    nconvd[1][thebin] += 1.0;
-
+	    
 	    convd[2][thebin]  += adc_ped_sub_right;
 	    nconvd[2][thebin] += 1.0;
-
+	    
 	  }
 	} //loop over timebins
-       
+      
 	for (int m=0; m<3; m++){
 	  for (int n=0; n<120; n++){
-            if(nconvd[m][n]>1.0){
-	    convd[m][n] = convd[m][n]/nconvd[m][n];
+	    if(nconvd[m][n]>1.0 && nconvd[m][n] !=0.){
+	      convd[m][n] = convd[m][n]/nconvd[m][n];
 	    }
 	  }
 	}
-   
-     
+	
 	// Call our functions to calculate the cross-talk
 	float xl_temp_a = 0.;
 	float xl_temp_b = 0.;
@@ -321,14 +313,33 @@ int main(int argc, char **argv) {
 	float minr_temp = 0.;
 	mkbins(50.);
 	convolution(&xl_temp_a, &xl_temp_b, &minl_temp, &xr_temp_a, &xr_temp_b, &minr_temp);
+	
+	if (k==0){
+	  xtalk_intercept_left[i][j][k]  = 0.0;
+	  xtalk_slope_left[i][j][k]      = 0.0;
+	  xtalk_chi2_left[i][j][k]       = 0.0;
+	  //right side is calculated
+	  xtalk_slope_right[i][j][k]     = xl_temp_b;
+	  xtalk_intercept_right[i][j][k] = xl_temp_a;
+	  xtalk_chi2_right[i][j][k]      = minl_temp;
 
-	xtalk_intercept_left[i][j][k]  = xl_temp_a;
-        xtalk_intercept_right[i][j][k] = xr_temp_a;
-	xtalk_slope_left[i][j][k]      = xl_temp_b;
-	xtalk_slope_right[i][j][k]     = xr_temp_b;
-	xtalk_chi2_left[i][j][k]       = minl_temp;
-	xtalk_chi2_right[i][j][k]      = minr_temp;
+	}else if(k==79){
+	  xtalk_intercept_right[i][j][k]  = 0.0;
+	  xtalk_slope_right[i][j][k]      = 0.0;
+	  xtalk_chi2_right[i][j][k]       = 0.0;
+	  //left side is calculated
+	  xtalk_intercept_left[i][j][k]   = xr_temp_a;
+	  xtalk_slope_left[i][j][k]       = xr_temp_b;
+	  xtalk_chi2_left[i][j][k]        = minr_temp;
 
+	}else{
+	  xtalk_intercept_left[i][j][k]  = xl_temp_a;
+	  xtalk_intercept_right[i][j][k] = xr_temp_a;
+	  xtalk_slope_left[i][j][k]      = xl_temp_b;
+	  xtalk_slope_right[i][j][k]     = xr_temp_b;
+	  xtalk_chi2_left[i][j][k]       = minl_temp;
+	  xtalk_chi2_right[i][j][k]      = minr_temp;
+	}
 	fff = (j*80)+k;
 	double the_xtalk_left_a  = xtalk_intercept_left[i][j][k];
 	double the_xtalk_right_a = xtalk_intercept_right[i][j][k];
@@ -336,18 +347,18 @@ int main(int argc, char **argv) {
 	double the_xtalk_right_b = xtalk_slope_right[i][j][k];
 	double the_chi2_right    = xtalk_chi2_right[i][j][k];
 	double the_chi2_left     = xtalk_chi2_left[i][j][k];
-
+	
 	new_xtalk_intercept_right[fff] = the_xtalk_right_a ;
 	new_xtalk_intercept_left[fff]  = the_xtalk_left_a ;
 	new_xtalk_slope_right[fff]     = the_xtalk_right_b ;
 	new_xtalk_slope_left[fff]      = the_xtalk_left_b ;
 	new_rchi2[fff]                 = the_chi2_right;
 	new_lchi2[fff]                 = the_chi2_left;
-
-	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Intercept right "<<new_xtalk_intercept_right[fff]<<"   Slope right "<<new_xtalk_slope_right[fff]<<"   chi2 right "<<new_rchi2[fff]<<endl;
+	
+	std::cout<<"Chamber "<<i<<" Layer "<<j<<" strip "<<k<<" Intercept left "<<new_xtalk_intercept_left[fff]<<"   Slope left "<<new_xtalk_slope_left[fff]<<"   Intercept right "<<new_xtalk_intercept_right[fff]<<"       Slope right "<<new_xtalk_slope_right[fff]<<endl;
       }//loop over strips
     }//loop over layers
-
+    
     //get chamber ID from Igor's mapping    
     int new_crateID = crateID[i];
     int new_dmbID   = dmbID[i];
@@ -363,9 +374,9 @@ int main(int argc, char **argv) {
     string test6="xtalk_intercept_right";
     string test7="xtalk_chi2_right";
     string answer;
-
+    
     std::cout<<" DO you want to send constants to DB? "<<" Please answer y or n for EACH chamber present! "<<std::endl;
-
+    
     std::cin>>answer;
     if(answer=="y"){
       cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, new_xtalk_slope_left,      4, &ret_code);
@@ -517,9 +528,4 @@ void convolution(float *xleft_a, float *xleft_b, float *min_left, float *xright_
   *min_right = chi2_right;
 
 } //CONVOLUTION  
-
-
-
-
-
 
