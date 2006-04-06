@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
   int i_chamber=0,i_layer=0;
   int reportedChambers =0;
   int fff,ret_code;  
-  
+  float aPeak=0.0,sumFive=0.0;
+
   //needed for database and mapping
   condbc *cdb = new condbc(); 
   cscmap *map = new cscmap();
@@ -93,24 +94,35 @@ int main(int argc, char **argv) {
   int evt=0;
   std::vector<int> newadc;
   std::vector<int> adc;
-  float pedMean=0.0,time=0.0;
+  float pedMean=0.0,time=0.0,max =-9999999.,max1=-9999999.;
   int pedSum = 0, strip =-999;
   
   //definition of arrays
   double arrayOfPed[CHAMBERS][LAYERS][STRIPS];
   double arrayOfPedSquare[CHAMBERS][LAYERS][STRIPS];
   double arrayPed[CHAMBERS][LAYERS][STRIPS];
-
+  double arrayPeak[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfPeak[CHAMBERS][LAYERS][STRIPS];
+  double arrayOfPeakSquare[CHAMBERS][LAYERS][STRIPS];
+  double arraySumFive[CHAMBERS][LAYERS][STRIPS];
+  
   double newPed[480];
   double newRMS[480];
+  double newPeakRMS[480];
+  double newPeak[480];
+  double newSumFive[480];
   
   //initialize arrays
   for(int i=0;i<CHAMBERS;i++){
     for(int j=0; j<LAYERS; j++){
       for(int k=0; k<STRIPS; k++){
-	arrayOfPed[i][j][k] = 0.;
+	arrayOfPed[i][j][k]       = 0.;
 	arrayOfPedSquare[i][j][k] = 0.;
-	arrayPed[i][j][k]=0.;
+	arrayPed[i][j][k]         = 0.;
+	arrayPeak[i][j][k]        = 0.;
+	arrayOfPeak[i][j][k]      = 0.; 
+	arrayOfPeakSquare[i][j][k]= 0.;
+	arraySumFive[i][j][k]        = 0.;
       }
     }
   }
@@ -118,6 +130,9 @@ int main(int argc, char **argv) {
   for (int i=0;i<480;i++){
     newPed[i]=0;
     newRMS[i]=0;
+    newPeakRMS[i]=0.;
+    newPeak[i]=0.;
+    newSumFive[i]=0.;
   }
   
   //opening data files and checking data (copied from Alex Tumanov's code)
@@ -163,7 +178,6 @@ int main(int argc, char **argv) {
 	    strip = digis[i].getStrip();
 	    adc   = digis[i].getADCCounts();
 	    
-	    
 	    pedSum  = adc[0]+adc[1];
 	    pedMean = (float)pedSum/2.0;
 	    
@@ -173,11 +187,18 @@ int main(int argc, char **argv) {
 	    calib_evt.chamber  = i_chamber;
 	    calib_evt.layer    = i_layer;
 
-	   
-
 	    for(unsigned int k=0;k<adc.size();k++){//loop over timeBins
 	      time = (50. * k)-((event%20)* 6.25)+116.5;	      
+	      aPeak   = adc[3];
+	      sumFive = adc[2]+adc[3]+adc[4];
 	      
+	      if (max <aPeak){
+		max=aPeak;
+	      }
+	      if (max1<sumFive){
+		max1=sumFive;
+	      }
+
 	      calib_evt.adc[k]  = adc[k];
 	      calib_evt.time[k]  = time;
 
@@ -189,6 +210,12 @@ int main(int argc, char **argv) {
 	    arrayOfPed[i_chamber][i_layer - 1][strip - 1] += pedMean;
 	    arrayOfPedSquare[i_chamber][i_layer - 1][strip - 1] += pedMean*pedMean ;
 
+	    arrayPeak[i_chamber][i_layer-1][strip-1] = max-pedMean;
+	    arrayOfPeak[i_chamber][i_layer - 1][strip - 1] += max-pedMean;
+	    arrayOfPeakSquare[i_chamber][i_layer - 1][strip - 1] += (max-pedMean)*(max-pedMean);
+
+	    arraySumFive[i_chamber][i_layer-1][strip-1] = (max1-pedMean)/(max-pedMean);
+	    
 	  }//end digis loop
 	}//end if cfeb.available loop
       }//end layer loop
@@ -202,14 +229,19 @@ int main(int argc, char **argv) {
 
   //create array (480 entries) for database transfer
   for(int myChamber=0; myChamber<CHAMBERS; myChamber++){
-    double meanPedestal = 0.;
+    double meanPedestal = 0.0,meanPeak=0.0,meanPeakSquare=0.;
     double meanPedestalSquare = 0.;
     double theRMS = 0.;
     double thePedestal =0.;
     double theRSquare = 0.;
+    double thePeak =0.0,thePeakRMS=0.0;
+    double theSumFive=0.0;
+
     std::string test1="CSC_slice";
     std::string test2="pedestal";
     std::string test3="ped_rms";
+    std::string test4="peak_spread";
+    std::string test5="pulse_shape";
     std::string answer;
     
     for (int i=0; i<CHAMBERS; i++){
@@ -226,7 +258,17 @@ int main(int argc, char **argv) {
 	  newRMS[fff]  = theRMS;
 	  theRSquare   = (thePedestal-meanPedestal)*(thePedestal-meanPedestal)/(theRMS*theRMS*theRMS*theRMS); 
 	  
-	  std::cout <<" chamber "<<i<<" layer "<<j<<" strip "<<fff<<"  ped "<<newPed[fff]<<" RMS "<<newRMS[fff]<<std::endl;
+	  thePeak = arrayPeak[i][j][k];
+	  meanPeak = arrayOfPeak[i][j][k] / evt;
+	  meanPeakSquare = arrayOfPeakSquare[i][j][k] / evt;
+	  thePeakRMS = sqrt(abs(meanPeakSquare - meanPeak*meanPeak));
+	  newPeakRMS[fff] = thePeakRMS;
+	  newPeak[fff] = thePeak;
+
+	  theSumFive = arraySumFive[i][j][k];
+	  newSumFive[fff]=theSumFive;
+
+	  std::cout <<" chamber "<<i<<" layer "<<j<<" strip "<<fff<<"  ped "<<newPed[fff]<<" RMS "<<newRMS[fff]<<" peakADC "<<newPeak[fff]<<" Peak RMS "<<newPeakRMS[fff]<<" Sum_of_four/apeak "<<newSumFive[fff]<<std::endl;
 	}
       }
     }
@@ -244,8 +286,11 @@ int main(int argc, char **argv) {
     std::cin>>answer;
     if(answer=="y"){
       //SEND CONSTANTS TO DB
-      cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newPed,2, &ret_code);
-      cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newRMS,2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test2,480, newPed, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test3,480, newRMS, 2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test4,480, newPeakRMS,2, &ret_code);
+      cdb->cdb_write(test1,chamber_id,chamber_num,test5,480, newSumFive,2, &ret_code);
+
       std::cout<<" Your results were sent to DB !!! "<<std::endl;
     }else{
       std::cout<<" NO data was sent!!! "<<std::endl;
