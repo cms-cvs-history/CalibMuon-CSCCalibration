@@ -1,6 +1,16 @@
 
 ############ THIS IS A LIST OF CALIBRATION CODE FOR CSC CATHODE STRIPS and ANODE WIRES ############
 
+1. CSCPedestalAnalyzer.cc and .h run now with cmsRun and a configuration file! 
+2. condbc.h changed to accept floats.
+
+
+This is the status 2006.04.18 !!!!!
+
+*****************************************************************************************************
+This is an older way to run! You need to get your own condbc.h file for double if you want to run it according to 
+the instructions below!!
+ 
 OBS!!!  This is not yet according to CMSSW rules, but need to keep a copy for myself and whomever wants to look at this code !!!!
 
 Usage of programs listed here:
