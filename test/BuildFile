@@ -3,10 +3,14 @@
 <use name=IORawData/CSCCommissioning>
 <use name=FWCore/MessageService>
 <use name=FWCore/Framework>
+<use name=oracle>
+<lib name=occi>
+<lib name=condbc>
+<lib name=cscmap>
 <use name=rootcore>
 <use name=root>
 <flags CXXFLAGS="-g">
 
-<library file=PedestalAnalyzer.cc name=PedestalAnalyzer>
-   <flags SEAL_PLUGIN_NAME="PedestalAnalyzer">
+<library file=../src/CSCPedestalAnalyzer.cc name=CSCPedestalAnalyzer>
+   <flags SEAL_PLUGIN_NAME="CSCPedestalAnalyzer">
 </library>
