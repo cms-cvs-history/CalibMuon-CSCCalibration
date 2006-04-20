@@ -1,18 +1,21 @@
 
 ############ THIS IS A LIST OF CALIBRATION CODE FOR CSC CATHODE STRIPS and ANODE WIRES ############
 
-1. CSCPedestalAnalyzer.cc and .h run now with cmsRun and a configuration file! 
-2. condbc.h changed to accept floats.
+0. Set up an area for CMSSW and get CalibMuon/CSCCalibration (see below older instructions).
+0.1 cc files are in /src and .h files in /interface. Configuration files and BuildFile in /test
 
+1. CSCPedestalAnalyzer.cc and .h run with cmsRun and the configuration file CSCped.cfg
 
-This is the status 2006.04.18 !!!!!
+2. CSCGainAnalyzer.cc and .h run with cmsRun and configuration file CSCgain.cfg 
+
+2.1 condbc.h changed to accept floats (old one for doubles is called condbc_double.h) 
+
+This is the status 2006.04.20 !!!!!
 
 *****************************************************************************************************
-This is an older way to run! You need to get your own condbc.h file for double if you want to run it according to 
-the instructions below!!
+This is an older way to run! You need to get your own condbc.h file for double if you want double precission 
+and change in the code float to double for the DB transfer!!
  
-OBS!!!  This is not yet according to CMSSW rules, but need to keep a copy for myself and whomever wants to look at this code !!!!
-
 Usage of programs listed here:
 
 0.1 Create your project area CMSSW_x_x_x by:
@@ -35,7 +38,8 @@ Usage of programs listed here:
 
     to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area.
 
-0.3 Build all packages by executing "scramv1 b" in directories where a BuildFile is present or at the very top (in CMSSW_x_x_x/src).
+0.3 Build all packages by executing "scramv1 b" in directories where a BuildFile is present or at the very top 
+(in CMSSW_x_x_x/src).
 
 
 1.  Make soft links to all of the executables so you can run from test, alternatively run them from 
