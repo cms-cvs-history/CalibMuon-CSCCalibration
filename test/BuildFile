@@ -14,3 +14,7 @@
 <library file=../src/CSCPedestalAnalyzer.cc name=CSCPedestalAnalyzer>
    <flags SEAL_PLUGIN_NAME="CSCPedestalAnalyzer">
 </library>
+
+<library file=../src/CSCGainAnalyzer.cc name=CSCGainAnalyzer>
+   <flags SEAL_PLUGIN_NAME="CSCGainAnalyzer">
+</library>
