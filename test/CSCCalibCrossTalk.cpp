@@ -16,7 +16,7 @@
 #include "EventFilter/CSCRawToDigi/interface/CSCDMBHeader.h"
 #include "CalibMuon/CSCCalibration/interface/condbc.h"
 #include "CalibMuon/CSCCalibration/interface/cscmap.h" 
-
+#include "FWCore/MessageService/interface/MessageServicePresence.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -32,7 +32,7 @@
 #include "/afs/cern.ch/cms/external/lcg/external/root/5.08.00/slc3_ia32_gcc323/root/include/TTree.h"
 
 //constants declaration
-#define CHAMBERS 4
+#define CHAMBERS 5
 #define LAYERS 6
 #define STRIPS 80
 #define TIMEBINS 8
@@ -61,7 +61,7 @@ float conve[120];
 float conv[3][120];
 
 int main(int argc, char **argv) {
-  
+  edm::service::MessageServicePresence my_message_service;
   //for debugging purposes from Alex Tumanov's code
   //set to true if you wish to debug data
   CSCAnodeData::setDebug(false);
@@ -113,15 +113,15 @@ int main(int argc, char **argv) {
   float xtalk_chi2_right[CHAMBERS][LAYERS][STRIPS];
   float myPeakTime[CHAMBERS][LAYERS][STRIPS];
   float myMeanPeakTime[CHAMBERS][LAYERS][STRIPS];
-  double new_xtalk_intercept_right[480];
-  double new_xtalk_intercept_left[480];
-  double new_xtalk_slope_right[480];
-  double new_xtalk_slope_left[480];
-  double array_meanPeakTime[CHAMBERS][LAYERS][STRIPS];
-  double new_rchi2[480];
-  double new_lchi2[480];
-  double newPeakTime[480];
-  double newMeanPeakTime[480];
+  float new_xtalk_intercept_right[480];
+  float new_xtalk_intercept_left[480];
+  float new_xtalk_slope_right[480];
+  float new_xtalk_slope_left[480];
+  float array_meanPeakTime[CHAMBERS][LAYERS][STRIPS];
+  float new_rchi2[480];
+  float new_lchi2[480];
+  float newPeakTime[480];
+  float newMeanPeakTime[480];
   
    //initialize arrays  
   for (int i=0;i<480;i++){
@@ -272,8 +272,8 @@ int main(int argc, char **argv) {
   float adc_ped_sub = -999.;
   float adc_ped_sub_right = -999.;
   int thebin;
-  double sum=0.0;
-  double mean=0;
+  float sum=0.0;
+  float mean=0;
 	
   for (int i=0; i<CHAMBERS; i++){
     for (int j=0; j<LAYERS; j++){
@@ -410,13 +410,13 @@ int main(int argc, char **argv) {
 	}
 	
 	fff = (j*80)+k;
-	double the_xtalk_left_a  = xtalk_intercept_left[i][j][k];
-	double the_xtalk_right_a = xtalk_intercept_right[i][j][k];
-	double the_xtalk_left_b  = xtalk_slope_left[i][j][k];
-	double the_xtalk_right_b = xtalk_slope_right[i][j][k];
-	double the_chi2_right    = xtalk_chi2_right[i][j][k];
-	double the_chi2_left     = xtalk_chi2_left[i][j][k];
-	double the_peakTime      = myPeakTime[i][j][k]; 
+	float the_xtalk_left_a  = xtalk_intercept_left[i][j][k];
+	float the_xtalk_right_a = xtalk_intercept_right[i][j][k];
+	float the_xtalk_left_b  = xtalk_slope_left[i][j][k];
+	float the_xtalk_right_b = xtalk_slope_right[i][j][k];
+	float the_chi2_right    = xtalk_chi2_right[i][j][k];
+	float the_chi2_left     = xtalk_chi2_left[i][j][k];
+	float the_peakTime      = myPeakTime[i][j][k]; 
 	
 	new_xtalk_intercept_right[fff] = the_xtalk_right_a ;
 	new_xtalk_intercept_left[fff]  = the_xtalk_left_a ;

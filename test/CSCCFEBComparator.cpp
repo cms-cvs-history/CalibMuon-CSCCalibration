@@ -15,6 +15,7 @@
 #include "EventFilter/CSCRawToDigi/interface/CSCDMBHeader.h"
 #include "CalibMuon/CSCCalibration/interface/condbc.h"
 #include "CalibMuon/CSCCalibration/interface/cscmap.h" 
+#include "FWCore/MessageService/interface/MessageServicePresence.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -45,7 +46,7 @@ class TCalibEvt { public:
 //void dierfc(double y);
 
 int main(int argc, char **argv) {
-
+  edm::service::MessageServicePresence my_message_service;
   //for debugging purposes from Alex Tumanov's code
   //set to true if you wish to debug data
   CSCAnodeData::setDebug(false);
