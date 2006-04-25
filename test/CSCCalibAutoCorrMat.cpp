@@ -15,6 +15,7 @@
 #include "CalibMuon/CSCCalibration/interface/condbc.h"
 #include "CalibMuon/CSCCalibration/interface/cscmap.h" 
 #include "CalibMuon/CSCCalibration/interface/AutoCorrMat.h"
+#include "FWCore/MessageService/interface/MessageServicePresence.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -35,7 +36,7 @@
 #define STRIPS 80
 
 int main(int argc, char **argv) {
-
+  edm::service::MessageServicePresence my_message_service;
   //for debugging purpose from Alex Tumanov's code
   //set to true if you wish to debug data
   CSCAnodeData::setDebug(false);
@@ -53,18 +54,18 @@ int main(int argc, char **argv) {
   int dmbID[CHAMBERS],crateID[CHAMBERS],chamber_num,sector;
   int reportedChambers =0;
   int ret_code;  
-  double newMatrix1[480];
-  double newMatrix2[480];
-  double newMatrix3[480];
-  double newMatrix4[480];
-  double newMatrix5[480];
-  double newMatrix6[480];
-  double newMatrix7[480];
-  double newMatrix8[480];
-  double newMatrix9[480];
-  double newMatrix10[480];
-  double newMatrix11[480];
-  double newMatrix12[480];
+  float newMatrix1[480];
+  float newMatrix2[480];
+  float newMatrix3[480];
+  float newMatrix4[480];
+  float newMatrix5[480];
+  float newMatrix6[480];
+  float newMatrix7[480];
+  float newMatrix8[480];
+  float newMatrix9[480];
+  float newMatrix10[480];
+  float newMatrix11[480];
+  float newMatrix12[480];
 
   for (int i=0;i<480;i++){
     newMatrix1[i]=0.0;
@@ -140,8 +141,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  double corrmat[12];
-  double *tmp;
+  float corrmat[12];
+  float *tmp;
   tmp=corrmat; 
 
   std::string test1="CSC_slice";

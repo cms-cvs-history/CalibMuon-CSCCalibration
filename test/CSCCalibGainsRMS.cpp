@@ -17,6 +17,7 @@
 #include "EventFilter/CSCRawToDigi/interface/CSCDMBHeader.h"
 #include "CalibMuon/CSCCalibration/interface/condbc.h"
 #include "CalibMuon/CSCCalibration/interface/cscmap.h" 
+#include "FWCore/MessageService/interface/MessageServicePresence.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -49,6 +50,7 @@ class TCalibEvt { public:
 };
 
 int main(int argc, char **argv) {
+  edm::service::MessageServicePresence my_message_service;
   //for debugging purposes from Alex Tumanov's code
   //set to true if you wish to debug data
   CSCAnodeData::setDebug(false);
@@ -100,16 +102,16 @@ int main(int argc, char **argv) {
   const float x[10] = {22.4, 44.8, 67.2, 89.6, 112, 134.4, 156.8, 179.2, 201.6, 224.0};// 246.4, 268.8, 291.2, 313.6, 336.0, 358.4, 380.8, 403.2, 425.6, 448};
  
   //definition of arrays
-  double adcMax[CHAMBERS][LAYERS][STRIPS];
-  double adcMean_max[CHAMBERS][LAYERS][STRIPS];
-  double arrayOfGain[CHAMBERS][LAYERS][STRIPS];
-  double arrayOfGainSquare[CHAMBERS][LAYERS][STRIPS];
-  double arrayOfIntercept[CHAMBERS][LAYERS][STRIPS];
-  double arrayOfChi2[CHAMBERS][LAYERS][STRIPS];
-  double arrayOfInterceptSquare[CHAMBERS][LAYERS][STRIPS];
-  double newGain[480];
-  double newIntercept[480];
-  double newChi2[480];
+  float adcMax[CHAMBERS][LAYERS][STRIPS];
+  float adcMean_max[CHAMBERS][LAYERS][STRIPS];
+  float arrayOfGain[CHAMBERS][LAYERS][STRIPS];
+  float arrayOfGainSquare[CHAMBERS][LAYERS][STRIPS];
+  float arrayOfIntercept[CHAMBERS][LAYERS][STRIPS];
+  float arrayOfChi2[CHAMBERS][LAYERS][STRIPS];
+  float arrayOfInterceptSquare[CHAMBERS][LAYERS][STRIPS];
+  float newGain[480];
+  float newIntercept[480];
+  float newChi2[480];
   float maxmodten[NUMMODTEN][CHAMBERS][LAYERS][STRIPS];
 
 
@@ -239,10 +241,10 @@ int main(int argc, char **argv) {
   //create array (480 entries) for database transfer
   for(int chamberiter=0; chamberiter<CHAMBERS; chamberiter++){
   
-    double the_gain_sq   = 0.;
-    double the_gain      = 0.;
-    double the_intercept = 0.; 
-    double the_chi2      = 0.;
+    float the_gain_sq   = 0.;
+    float the_gain      = 0.;
+    float the_intercept = 0.; 
+    float the_chi2      = 0.;
         
     for (int cham=0;cham<CHAMBERS;cham++){
       if (cham !=chamberiter) continue;
