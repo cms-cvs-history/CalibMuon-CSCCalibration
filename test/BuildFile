@@ -18,3 +18,7 @@
 <library file=../src/CSCGainAnalyzer.cc name=CSCGainAnalyzer>
    <flags SEAL_PLUGIN_NAME="CSCGainAnalyzer">
 </library>
+
+<library file=../src/CSCNoiseMatrixAnalyzer.cc name=CSCNoiseMatrixAnalyzer>
+   <flags SEAL_PLUGIN_NAME="CSCNoiseMatrixAnalyzer">
+</library>
