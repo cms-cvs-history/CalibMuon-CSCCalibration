@@ -10,10 +10,31 @@
 
 2.1 condbc.h changed to accept floats (old one for doubles is called condbc_double.h) 
 
-This is the status 2006.04.20 !!!!!
+3. CSCCrossTalkAnalyzer.cc and .h run with cmsRun and configuration file CSCxtalk.cfg
+
+This is the status 2006.05.03 !!!!!
+
+List of calibration files in CASTOR:
+
+RunNum1070Evs0to9999.bin for gains (ME2 chambers:2/1/14, 2/2/27, 2/2/29, 2/2/30, 2/2/28)
+RunNum1071Evs0to9999.bin for matrix elements (ME2 chambers)
+RunNum1072Evs0to9999.bin for cross-talk (ME2 chambers)
+RunNum1073Evs0to9999.bin for cross-talk (ME3 chambers:3/1/14, 3/2/27, 3/2/28, 3/2/29) 
+RunNum1074Evs0to9999.bin for gains (ME3 chambers)
+RunNum1075Evs0to9999.bin for matrix elements (ME3 chambers)
+RunNum1076Evs0to9999.bin for cross-talk (ME1a chambers:1/1/27, 1/1/28, 1/1/29, 1/2/27, 1/2/28, 1/2/29)
+RunNum1077Evs0to9999.bin for gains (ME1a chambers)
+RunNum1078Evs0to9999.bin for matrix elements (ME1a chambers)
+RunNum1079Evs0to9999.bin for cross-talk (ME1b chambers:1/1/30, 1/1/31, 1/1/32, 1/2/30, 1/2/31)
+RunNum1080Evs0to9999.bin for gains (ME1b chambers)
+RunNum1081Evs0to9999.bin for matrix elements (ME1b chambers)
+
+
+
 
 *****************************************************************************************************
-This is an older way to run! You need to get your own condbc.h file for double if you want double precission 
+This is an older way to run, all files have been removed, but they exist in Attic in CVS! 
+You need to get your own condbc.h file for double if you want double precission 
 and change in the code float to double for the DB transfer!!
  
 Usage of programs listed here:
