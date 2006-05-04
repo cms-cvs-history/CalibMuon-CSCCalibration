@@ -22,3 +22,9 @@
 <library file=../src/CSCNoiseMatrixAnalyzer.cc name=CSCNoiseMatrixAnalyzer>
    <flags SEAL_PLUGIN_NAME="CSCNoiseMatrixAnalyzer">
 </library>
+
+<library file=../src/CSCCrossTalkAnalyzer.cc name=CSCCrossTalkAnalyzer>
+   <flags SEAL_PLUGIN_NAME="CSCCrossTalkAnalyzer">
+</library>
+
+
