@@ -27,4 +27,6 @@
    <flags SEAL_PLUGIN_NAME="CSCCrossTalkAnalyzer">
 </library>
 
-
+<library file=../src/CSCAFEBdacAnalyzer.cc name=CSCAFEBdacAnalyzer>
+   <flags SEAL_PLUGIN_NAME="CSCAFEBdacAnalyzer">
+</library>
