@@ -4,6 +4,14 @@
 0. Set up an area for CMSSW and get CalibMuon/CSCCalibration (see below older instructions).
 0.1 cc files are in /src and .h files in /interface. Configuration files and BuildFile in /test
 
+Copy .so files for ORACLE database transfer from:
+      
+       http://cmsdoc.cern.ch/cms/CSC/CERN/dbc_library/   (copy: libcondbc.so)
+       http://cmsdoc.cern.ch/CSC/CERN/cscmap_library/    (copy: libcscmap.so)
+
+    to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area.
+
+
 1. CSCPedestalAnalyzer.cc and .h run with cmsRun and the configuration file CSCped.cfg
 
 2. CSCGainAnalyzer.cc and .h run with cmsRun and configuration file CSCgain.cfg 
@@ -12,7 +20,11 @@
 
 3. CSCCrossTalkAnalyzer.cc and .h run with cmsRun and configuration file CSCxtalk.cfg
 
-This is the status 2006.05.03 !!!!!
+4. CSCAFEBdacAnalyzer.cc and .h run with cmsRun and configuration file CSCAFEBdac.cfg
+
+5. CSCCompThreshAnalyzer.cc and .h run with cmsRun and configuration file CSCcomp.cfg
+
+This is the status 2006.05.09 !!!!!
 
 List of calibration files in CASTOR:
 
@@ -33,7 +45,7 @@ RunNum1081Evs0to9999.bin for matrix elements (ME1b chambers)
 
 
 *****************************************************************************************************
-This is an older way to run, all files have been removed, but they exist in Attic in CVS! 
+This is an older way to run, all files have been removed, but they exist in /Attic in CVS! 
 You need to get your own condbc.h file for double if you want double precission 
 and change in the code float to double for the DB transfer!!
  
