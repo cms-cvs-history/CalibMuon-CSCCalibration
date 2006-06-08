@@ -1,31 +1,38 @@
 
 ############ THIS IS A LIST OF CALIBRATION CODE FOR CSC CATHODE STRIPS and ANODE WIRES ############
 
-0. Set up an area for CMSSW and get CalibMuon/CSCCalibration (see below older instructions).
-0.1 cc files are in /src and .h files in /interface. Configuration files and BuildFile in /test
+0. Set up an area for CMSSW (works currently in CMSSW_0_7_0_pre3) and check out:
+    CalibMuon/CSCCalibration 
+    DataFormats/CSCDigi
+    EventFilter/CSCRawToDigi 
 
-Copy .so files for ORACLE database transfer from:
+0.1 Source files are in /src and header files in /interface. 
+
+0.2 Copy .so files for ORACLE database transfer from:
       
        http://cmsdoc.cern.ch/cms/CSC/CERN/dbc_library/   (copy: libcondbc.so)
        http://cmsdoc.cern.ch/CSC/CERN/cscmap_library/    (copy: libcscmap.so)
 
-    to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area.
+    to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area. Ask Igor Vorobiev, Oana Boeriu, Nikolai Terentyev 
+    for the username and password !
 
+0.3 COMPILE & LINK under CalibMuon/CSCCalibration !!
 
-1. CSCGainAnalyzer.cc and .h run with cmsRun and configuration file CSCgain.cfg 
+0.4 Create directories runs and ntuples - without ntuples the root file won't be created!
+
+1.0 CSCGainAnalyzer.cc and .h, run: cmsRun CSCgain.cfg 
 
 1.1 condbc.h changed to accept floats (old one for doubles is called condbc_double.h) 
 
-2. CSCCrossTalkAnalyzer.cc and .h run with cmsRun and configuration file CSCxtalk.cfg
+1.2 Using condbon.h which takes an object for transfer! 
 
-3. CSCAFEBdacAnalyzer.cc and .h run with cmsRun and configuration file CSCAFEBdac.cfg
+2.0 CSCCrossTalkAnalyzer.cc and .h, run: cmsRun CSCxtalk.cfg
 
-4. CSCCompThreshAnalyzer.cc and .h run with cmsRun and configuration file CSCcomp.cfg
+3.0 CSCAFEBdacAnalyzer.cc and .h, run: cmsRun CSCAFEBdac.cfg
 
-5. There is a new library and .h file for transfer to DB that uses objects for the transfer. This will be 
-   (in the future) the way to transfer constants to DB!!
+4.0 CSCCompThreshAnalyzer.cc and .h, run: cmsRun CSCcomp.cfg
 
-This is the status 2006.05.16 !!!!!
+5.0 CSCAFEBAnalyzer.cc and .h, run: cmsRun CSCAFEBThr.cfg
 
 List of calibration files in CASTOR:
 
@@ -45,82 +52,6 @@ RunNum1082Evs0to9999.bin for cros-stalk (ME1 chambers:1/1/27, 1/1/28, 1/1/29, 1/
 RunNum1083Evs0to9999.bin for gains (ME1 chambers)
 
 	
-
-*****************************************************************************************************
-This is an older way to run, all files have been removed, but they exist in /Attic in CVS! 
-You need to get your own condbc.h file for double if you want double precission 
-and change in the code float to double for the DB transfer!!
- 
-Usage of programs listed here:
-
-0.1 Create your project area CMSSW_x_x_x by:
-     scramv1 project CMSSW CMSSW_x_x_x
-     cd CMSSW_x_x_x/src
-     check out from CVS (cvs co ) the following packages:
-      
-      CondFormats/CSCObjects
-      DataFormats/CSCDigi
-      Geometry/CSCSimAlgo
-      IORawData/CSCCommissioning
-      CalibMuon/CSCCalibration   ( ***<- work in directory /test in this package ->*** )
-	
-0.1 execute !ev ( which means setenv `scramv1 runtime -csh` == set up necessary CMSSW environment ).
-
-0.2 Copy .so files for ORACLE database transfer from:
-      
-       http://cmsdoc.cern.ch/cms/CSC/CERN/dbc_library/   (copy: libcondbc.so)
-       http://cmsdoc.cern.ch/CSC/CERN/cscmap_library/    (copy: libcscmap.so)
-
-    to your /CMSSW_x_x_x/lib/slc3_ia32_gcc323/ area.
-
-0.3 Build all packages by executing "scramv1 b" in directories where a BuildFile is present or at the very top 
-(in CMSSW_x_x_x/src).
-
-
-1.  Make soft links to all of the executables so you can run from test, alternatively run them from 
-    CMSSW_x_x_x/CMSSW_x_x_x/test/slc3_ia32_gcc323/  where executables will be created.
-
-1.0 Suggestion: create a directory called runs where you have the data.
-
-1.1 Suggestion: create a directory called ntuples where all root files will be put.
-
-2.  Run executables in /test or CMSSW_x_x_x/CMSSW_x_x_x/test/slc3_ia32_gcc323/ directory using:
-        
-	    ./executable_name data_file.bin
-
-3.  Calibration data files are usually in emuslice02:/data/test_results/   - look for recent .bin files (!)
-    OR CASTOR. To get them from CASTOR (usually works from an lxplus account) : 
-       
-	     rfcp /castor/cern.ch/cms/emuslice/2005/filename .  
-
-4.  Output of executables:  
-
-         ROOT ntuples and arrays containing calibration constants which can be moved to online database.
-
-5.  Any changes in the *.cpp files -> have to recompile again! (scramv1 b)
-
-6.  At present you have to uncomment the lines: cdb->cdb_write(....) to be able o transfer the constants to DB.
-
-  ***********************************************************************************************************
-  *					         ANALYSIS					            *	
-  ***********************************************************************************************************
-        > cd ntuples/
-	> root
-	> .x .root/rootlogon.C (looks nicer)
-
-a.  Pedestal values in 5 ME2 chambers:	
-	from inside root type:
-	> .x ped_macro.C
-	
-b. Gains in 5 ME2 chambers:
-	from inside root type:
-	> .x gain_macro.C
-
-c. Cross-talk in 5 ME2 chambers:
-	from inside root type:
-	> .x cros-talk_macro.C
-
-
-
-    This is the status 2006.03.09 !!!!!
-
+****************************************
+*  This is the status 2006.06.08 !!!!! *
+****************************************
