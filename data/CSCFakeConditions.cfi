@@ -1,22 +1,10 @@
 #used for fake conditions
-#es_source = CSCFakeConditions {
-#        untracked bool CSCGains = true
-#        untracked bool CSCNoiseMatrix = true
-#        untracked bool CSCcrosstalk = true
-#        untracked bool CSCPedestals = true
+es_source = CSCFakeGainsConditions{}
+es_source = CSCFakePedestalsConditions{}
+es_source = CSCFakeNoiseMatrixConditions{}
+es_source = CSCFakeCrosstalkConditions{}
 
-#       If set true reading optimized weights (3+5 weights) from file 
-#        untracked bool getWeightsFromFile = true
-
-#       Values to get correct noise on RecHit amplitude using 3+5 weights
-#        untracked double EBpedRMSX12 = 1.26
-#        untracked double EEpedRMSX12 = 2.87
-#       untracked string amplWeightsFile = "CalibCalorimetry/EcalTrivialCondModules/data/ampWeights_TB.txt"
-
-       ## file with intercalib constants - same format used for online and offline DB
-       # by default set all inter calib const to 1.0 if no file provided
-#       untracked string  intercalibConstantsFile = ""
-
-#}
-
-es_module CSCfakeConditions = CSCFakeConditionsProducer{}
+es_module CSCFakeConditions1 = CSCFakeGainsConditions{}
+es_module CSCFakeConditions2 = CSCFakePedestalsConditions{}
+es_module CSCFakeConditions3 = CSCFakeNoiseMatrixConditions{}
+es_module CSCFakeConditions4 = CSCFakeCrosstalkConditions{}
