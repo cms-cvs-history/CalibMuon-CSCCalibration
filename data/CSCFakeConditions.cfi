@@ -4,7 +4,4 @@ es_source = CSCFakePedestalsConditions{}
 es_source = CSCFakeNoiseMatrixConditions{}
 es_source = CSCFakeCrosstalkConditions{}
 
-es_module CSCFakeConditions1 = CSCFakeGainsConditions{}
-es_module CSCFakeConditions2 = CSCFakePedestalsConditions{}
-es_module CSCFakeConditions3 = CSCFakeNoiseMatrixConditions{}
-es_module CSCFakeConditions4 = CSCFakeCrosstalkConditions{}
+
