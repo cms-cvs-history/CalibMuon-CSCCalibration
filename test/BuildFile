@@ -1,0 +1,23 @@
+<use name=CondFormats/Calibration>
+<use name=CondFormats/DataRecord>
+<use name=CondCore/PopCon>
+<use name=CondFormats/CSCObjects>
+<use name=CalibMuon/CSCCalibration>
+<use name=FWCore/ParameterSet>
+<use name=FWCore/Framework>
+
+<library name=CSCCrosstalkPopConAnalyzer file=stubs/CSCCrosstalkHandler.cc,stubs/CSCCrosstalkPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
+
+<library name=CSCGainsPopConAnalyzer file=stubs/CSCGainsHandler.cc,stubs/CSCGainsPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
+
+<library name=CSCNoiseMatrixPopConAnalyzer file=stubs/CSCNoiseMatrixHandler.cc,stubs/CSCNoiseMatrixPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
+
+<library name=CSCPedestalsPopConAnalyzer file=stubs/CSCPedestalsHandler.cc,stubs/CSCPedestalsPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
