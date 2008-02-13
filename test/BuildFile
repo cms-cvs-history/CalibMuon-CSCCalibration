@@ -2,7 +2,7 @@
 <use name=CondFormats/DataRecord>
 <use name=CondCore/PopCon>
 <use name=CondFormats/CSCObjects>
-<use name=CalibMuon/CSCCalibration>
+#<use name=CalibMuon/CSCCalibration>
 <use name=FWCore/ParameterSet>
 <use name=FWCore/Framework>
 
