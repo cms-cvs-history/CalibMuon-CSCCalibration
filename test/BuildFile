@@ -3,7 +3,6 @@
 <use name=CondCore/PopCon>
 <use name=CondFormats/CSCObjects>
 
-
 <library name=CSCCrosstalkPopConAnalyzer file=stubs/CSCCrosstalkHandler.cc,stubs/CSCCrosstalkPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
