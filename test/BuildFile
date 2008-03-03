@@ -35,3 +35,11 @@
 <library name=CSCFakePedestalsPopConAnalyzer file=stubs/CSCFakeDBPedestalsHandler.cc,stubs/CSCFakePedestalsPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
+
+<library name=CSCBadStripsPopConAnalyzer file=stubs/CSCBadStripsHandler.cc,stubs/CSCBadStripsPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
+
+<library name=CSCBadWiresPopConAnalyzer file=stubs/CSCBadWiresHandler.cc,stubs/CSCBadWiresPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
