@@ -43,3 +43,7 @@
 <library name=CSCBadWiresPopConAnalyzer file=stubs/CSCBadWiresHandler.cc,stubs/CSCBadWiresPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
+
+<library name=CSCL1TPParametersPopConAnalyzer file=stubs/CSCL1TPParametersHandler.cc,stubs/CSCL1TPParametersPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
