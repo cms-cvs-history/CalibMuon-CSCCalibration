@@ -47,3 +47,7 @@
 <library name=CSCL1TPParametersPopConAnalyzer file=stubs/CSCL1TPParametersHandler.cc,stubs/CSCL1TPParametersPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
+
+<library name=CSCBadChambersPopConAnalyzer file=stubs/CSCBadChambersHandler.cc,stubs/CSCBadChambersPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
