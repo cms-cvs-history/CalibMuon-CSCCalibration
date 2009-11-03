@@ -1,3 +1,4 @@
+
 <use name=CondFormats/Calibration>
 <use name=CondFormats/DataRecord>
 <use name=CondCore/PopCon>
@@ -51,3 +52,7 @@
 <library name=CSCBadChambersPopConAnalyzer file=stubs/CSCBadChambersHandler.cc,stubs/CSCBadChambersPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
+
+<library name=Compare file=stubs/Compare.cc,stubs/Compare.cc>
+  <flags EDM_PLUGIN=1>
+</library
