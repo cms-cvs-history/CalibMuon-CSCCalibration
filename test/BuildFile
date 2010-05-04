@@ -53,6 +53,7 @@
   <flags EDM_PLUGIN=1>
 </library>
 
-<library name=Compare file=stubs/Compare.cc,stubs/Compare.cc>
+<library name=CSCChipSpeedCorrectionPopConAnalyzer file=stubs/CSCDBChipSpeedCorrectionHandler.cc,stubs/CSCChipSpeedCorrectionPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
-</library
+</library>
+
