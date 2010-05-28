@@ -49,6 +49,10 @@
   <flags EDM_PLUGIN=1>
 </library>
 
+<library name=CSCDBL1TPParametersPopConAnalyzer file=stubs/CSCDBL1TPParametersHandler.cc,stubs/CSCDBL1TPParametersPopConAnalyzer.cc>
+  <flags EDM_PLUGIN=1>
+</library>
+
 <library name=CSCBadChambersPopConAnalyzer file=stubs/CSCBadChambersHandler.cc,stubs/CSCBadChambersPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
