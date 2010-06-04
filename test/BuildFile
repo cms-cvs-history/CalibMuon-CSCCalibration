@@ -1,4 +1,3 @@
-
 <use name=CondFormats/Calibration>
 <use name=CondFormats/DataRecord>
 <use name=CondCore/PopCon>
@@ -60,4 +59,9 @@
 <library name=CSCChipSpeedCorrectionPopConAnalyzer file=stubs/CSCDBChipSpeedCorrectionHandler.cc,stubs/CSCChipSpeedCorrectionPopConAnalyzer.cc>
   <flags EDM_PLUGIN=1>
 </library>
+
+<library name=Compare file=stubs/Compare.cc>
+  <flags EDM_PLUGIN=1>
+</library
+
 
